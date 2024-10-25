@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "120650564130",
+    "firebase_url": "https://streaming-48b51-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "streaming-48b51",
+    "storage_bucket": "streaming-48b51.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:120650564130:android:fe284c445661a4e4c4407b",
+        "android_client_info": {
+          "package_name": "com.example.streaming"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA6rMROTfcKIlVF8Mo1L2N4A9Y7aj4fLEc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
