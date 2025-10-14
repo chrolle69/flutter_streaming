@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:streaming/features/home/data/models/enums.dart';
+import 'package:streaming/shared/data/models/enums.dart';
 
 class ProductDialogPickType extends StatefulWidget {
   const ProductDialogPickType({

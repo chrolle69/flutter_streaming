@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:streaming/features/home/presentation/widgets/bottomNav.dart';
-import 'package:streaming/features/home/presentation/pages/streamListPage.dart';
-import 'package:streaming/features/home/presentation/widgets/topNav.dart';
+import 'package:streaming/features/feed/presentation/widgets/bottomNav.dart';
+import 'package:streaming/features/feed/presentation/pages/streamListPage.dart';
+import 'package:streaming/features/feed/presentation/widgets/topNav.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});

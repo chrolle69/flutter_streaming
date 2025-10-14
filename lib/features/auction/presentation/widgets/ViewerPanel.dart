@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:streaming/features/home/presentation/blocs/productState.dart';
-import 'package:streaming/features/home/presentation/widgets/BidButton.dart';
-import 'package:streaming/features/home/presentation/widgets/ProductRowItemViewer.dart';
+import 'package:streaming/features/auction/presentation/blocs/productState.dart';
+import 'package:streaming/features/auction/presentation/widgets/BidButton.dart';
+import 'package:streaming/features/auction/presentation/widgets/ProductRowItemViewer.dart';
 
 class ViewerPanel extends StatelessWidget {
   const ViewerPanel({

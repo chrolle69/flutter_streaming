@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:streaming/core/resources/data_state.dart';
-import 'package:streaming/features/home/data/models/stream.dart';
-import 'package:streaming/features/home/data/repository/stream_repository_impl.dart';
-import 'package:streaming/features/home/domain/stream_repository.dart';
-import 'package:streaming/features/home/presentation/widgets/OwnerPanel.dart';
-import 'package:streaming/features/home/presentation/widgets/ViewerPanel.dart';
-import 'package:streaming/features/home/presentation/widgets/participanTile.dart';
+import 'package:streaming/features/auction/data/models/stream.dart';
+import 'package:streaming/features/auction/data/repository/stream_repository_impl.dart';
+import 'package:streaming/features/auction/domain/stream_repository.dart';
+import 'package:streaming/features/auction/presentation/widgets/OwnerPanel.dart';
+import 'package:streaming/features/auction/presentation/widgets/ViewerPanel.dart';
+import 'package:streaming/features/auction/presentation/widgets/participanTile.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:videosdk/videosdk.dart';
 

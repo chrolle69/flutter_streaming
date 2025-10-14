@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:streaming/features/home/data/models/productOfferDTO.dart';
-import 'package:streaming/features/home/presentation/blocs/productState.dart';
+import 'package:streaming/features/auction/data/models/productOfferDTO.dart';
+import 'package:streaming/features/auction/presentation/blocs/productState.dart';
 
 class ProductRowItemOwner extends StatelessWidget {
   const ProductRowItemOwner(
@@ -16,7 +16,7 @@ class ProductRowItemOwner extends StatelessWidget {
     return Card(
       child: Column(children: [
         Row(mainAxisAlignment: MainAxisAlignment.start, children: [
-          Text("${prod.name}",
+          Text(prod.name,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
               )),

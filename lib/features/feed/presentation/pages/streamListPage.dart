@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:streaming/core/resources/data_state.dart';
-import 'package:streaming/features/home/data/models/stream.dart';
-import 'package:streaming/features/home/data/repository/stream_repository_impl.dart';
-import 'package:streaming/features/home/domain/stream_repository.dart';
-import 'package:streaming/features/home/presentation/pages/addStreamPage.dart';
-import 'package:streaming/features/home/presentation/pages/roomPage.dart';
+import 'package:streaming/features/auction/data/models/stream.dart';
+import 'package:streaming/features/auction/data/repository/stream_repository_impl.dart';
+import 'package:streaming/features/auction/domain/stream_repository.dart';
+import 'package:streaming/features/auction/presentation/pages/addStreamPage.dart';
+import 'package:streaming/features/auction/presentation/pages/roomPage.dart';
 import 'package:streaming/routeObserver.dart';
 
 class StreamListPage extends StatefulWidget {
@@ -81,14 +81,18 @@ class _StreamListPageState extends State<StreamListPage> with RouteAware {
                     Image(
                       height: 100,
                       width: 100,
-                      image: const AssetImage('assets/images/default_image.jpg'),
+                      image:
+                          const AssetImage('assets/images/default_image.jpg'),
                     ),
                     Text(data[position].title),
                   ],
                 ),
               ),
               onTap: () {
-                Navigator.of(context).push(MaterialPageRoute(builder: (context) => RoomPage(roomId: data[position].id, onFetchStreams: fetchStreams)));
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => RoomPage(
+                        roomId: data[position].id,
+                        onFetchStreams: fetchStreams)));
               },
             );
           },
@@ -97,7 +101,9 @@ class _StreamListPageState extends State<StreamListPage> with RouteAware {
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
         onPressed: () {
-          Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddStreamPage(onStreamAdded: fetchStreams)));
+          Navigator.of(context).push(MaterialPageRoute(
+              builder: (context) =>
+                  AddStreamPage(onStreamAdded: fetchStreams)));
         },
       ),
     );

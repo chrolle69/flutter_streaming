@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:streaming/features/home/data/models/enums.dart';
-import 'package:streaming/features/home/data/repository/stream_repository_impl.dart';
-import 'package:streaming/features/home/domain/stream_repository.dart';
-import 'package:streaming/features/home/presentation/blocs/productState.dart';
-import 'package:streaming/features/home/presentation/widgets/ProductDialog_PickColor.dart';
-import 'package:streaming/features/home/presentation/widgets/ProductDialog_PickDescr.dart';
-import 'package:streaming/features/home/presentation/widgets/ProductDialog_PickIncrement.dart';
-import 'package:streaming/features/home/presentation/widgets/ProductDialog_PickName.dart';
-import 'package:streaming/features/home/presentation/widgets/ProductDialog_PickPrice.dart';
-import 'package:streaming/features/home/presentation/widgets/ProductDialog_PickSize.dart';
-import 'package:streaming/features/home/presentation/widgets/ProductDialog_PickType.dart';
-import 'package:streaming/features/home/presentation/widgets/ProductRowItemOwner.dart';
+import 'package:streaming/shared/data/models/enums.dart';
+import 'package:streaming/features/auction/data/repository/stream_repository_impl.dart';
+import 'package:streaming/features/auction/domain/stream_repository.dart';
+import 'package:streaming/features/auction/presentation/blocs/productState.dart';
+import 'package:streaming/features/auction/presentation/widgets/ProductDialog_PickColor.dart';
+import 'package:streaming/features/auction/presentation/widgets/ProductDialog_PickDescr.dart';
+import 'package:streaming/features/auction/presentation/widgets/ProductDialog_PickIncrement.dart';
+import 'package:streaming/features/auction/presentation/widgets/ProductDialog_PickName.dart';
+import 'package:streaming/features/auction/presentation/widgets/ProductDialog_PickPrice.dart';
+import 'package:streaming/features/auction/presentation/widgets/ProductDialog_PickSize.dart';
+import 'package:streaming/features/auction/presentation/widgets/ProductDialog_PickType.dart';
+import 'package:streaming/features/auction/presentation/widgets/ProductRowItemOwner.dart';
 
 class OwnerPanel extends StatelessWidget {
   const OwnerPanel({

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:streaming/features/home/data/models/enums.dart';
+import 'package:streaming/shared/data/models/enums.dart';
 import 'package:provider/provider.dart';
-import 'package:streaming/features/home/presentation/blocs/addStreamState.dart';
+import 'package:streaming/features/auction/presentation/blocs/addStreamState.dart';
 
 class AddStreamForm extends StatefulWidget {
   @override

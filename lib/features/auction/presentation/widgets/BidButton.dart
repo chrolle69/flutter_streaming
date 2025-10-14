@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:streaming/features/home/data/models/bidderDTO.dart';
-import 'package:streaming/features/home/data/models/productOfferDTO.dart';
-import 'package:streaming/features/home/presentation/blocs/productState.dart';
+import 'package:streaming/features/auction/data/models/bidderDTO.dart';
+import 'package:streaming/features/auction/data/models/productOfferDTO.dart';
+import 'package:streaming/features/auction/presentation/blocs/productState.dart';
 
 class BidButton extends StatelessWidget {
   const BidButton({super.key, required this.prod, required this.productState});

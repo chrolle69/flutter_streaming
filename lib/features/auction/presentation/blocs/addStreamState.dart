@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:streaming/core/resources/data_state.dart';
-import 'package:streaming/features/home/data/models/enums.dart';
-import 'package:streaming/features/home/data/repository/stream_repository_impl.dart';
-import 'package:streaming/features/home/domain/stream_repository.dart';
+import 'package:streaming/shared/data/models/enums.dart';
+import 'package:streaming/features/auction/data/repository/stream_repository_impl.dart';
+import 'package:streaming/features/auction/domain/stream_repository.dart';
 
 class AddStreamState extends ChangeNotifier {
   StreamRepository streamRep = StreamRepositoryImpl();

@@ -1,6 +1,6 @@
-import 'package:streaming/features/home/data/models/bidderDTO.dart';
-import 'package:streaming/features/home/data/models/enums.dart';
-import 'package:streaming/features/home/domain/entities/productOffer.dart';
+import 'package:streaming/features/auction/data/models/bidderDTO.dart';
+import 'package:streaming/shared/data/models/enums.dart';
+import 'package:streaming/features/auction/domain/entities/productOffer.dart';
 
 class ProductOfferDTO extends ProductOffer {
   const ProductOfferDTO({
@@ -17,7 +17,7 @@ class ProductOfferDTO extends ProductOffer {
 
   factory ProductOfferDTO.fromJson(Map<dynamic, dynamic> data) {
     List<BidderDTO> biddersListResult = [];
-    print("inside test::   " + data['bidders'].toString());
+    print("inside test::   ${data['bidders']}");
     try {
       // Cast bidders to a List<dynamic>
       var biddersMap = data['bidders'] as Map<dynamic, dynamic>;
@@ -34,7 +34,7 @@ class ProductOfferDTO extends ProductOffer {
     } catch (e) {
       print("Error while mapping bidders: $e");
     }
-    print("bidderlist:" + biddersListResult.toString());
+    print("bidderlist:$biddersListResult");
     // Handle startPrice and increase that could be int or double
     double startPrice = (data['startPrice'] is int)
         ? (data['startPrice'] as int).toDouble()

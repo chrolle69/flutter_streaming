@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:streaming/core/resources/data_state.dart';
-import 'package:streaming/features/home/data/models/stream.dart';
-import 'package:streaming/features/home/presentation/blocs/addStreamState.dart';
-import 'package:streaming/features/home/presentation/pages/roomPage.dart';
-import 'package:streaming/features/home/presentation/widgets/addStreamForm.dart';
+import 'package:streaming/features/auction/data/models/stream.dart';
+import 'package:streaming/features/auction/presentation/blocs/addStreamState.dart';
+import 'package:streaming/features/auction/presentation/pages/roomPage.dart';
+import 'package:streaming/features/auction/presentation/widgets/addStreamForm.dart';
 
 class AddStreamPage extends StatelessWidget {
   const AddStreamPage({super.key, required this.onStreamAdded});

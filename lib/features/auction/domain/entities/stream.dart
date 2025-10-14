@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
-import 'package:streaming/features/home/data/models/bidderDTO.dart';
-import 'package:streaming/features/home/data/models/enums.dart';
-import 'package:streaming/features/home/data/models/productOfferDTO.dart';
+import 'package:streaming/features/auction/data/models/bidderDTO.dart';
+import 'package:streaming/shared/data/models/enums.dart';
+import 'package:streaming/features/auction/data/models/productOfferDTO.dart';
 
 class Stream extends Equatable {
   final String id;

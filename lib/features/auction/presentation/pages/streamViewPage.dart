@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:streaming/features/home/data/models/stream.dart';
+import 'package:streaming/features/auction/data/models/stream.dart';
 
 class StreamViewPage extends StatefulWidget {
   const StreamViewPage({
@@ -13,8 +13,7 @@ class StreamViewPage extends StatefulWidget {
   State<StreamViewPage> createState() => _StreamViewPageState();
 }
 
-class _StreamViewPageState extends State<StreamViewPage> {    
-
+class _StreamViewPageState extends State<StreamViewPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(

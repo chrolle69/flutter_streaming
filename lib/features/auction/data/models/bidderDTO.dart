@@ -1,4 +1,4 @@
-import 'package:streaming/features/home/domain/entities/bidder.dart';
+import 'package:streaming/features/auction/domain/entities/bidder.dart';
 
 class BidderDTO extends Bidder {
   const BidderDTO({

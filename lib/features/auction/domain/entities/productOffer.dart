@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import 'package:streaming/features/home/data/models/bidderDTO.dart';
-import 'package:streaming/features/home/data/models/enums.dart';
+import 'package:streaming/features/auction/data/models/bidderDTO.dart';
+import 'package:streaming/shared/data/models/enums.dart';
 
 class ProductOffer extends Equatable {
   final String id;

@@ -1,10 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:streaming/features/home/data/models/bidderDTO.dart';
-import 'package:streaming/features/home/data/models/productOfferDTO.dart';
-import 'package:streaming/features/home/data/repository/stream_repository_impl.dart';
-import 'package:streaming/features/home/domain/stream_repository.dart';
+import 'package:streaming/features/auction/data/models/bidderDTO.dart';
+import 'package:streaming/features/auction/data/models/productOfferDTO.dart';
+import 'package:streaming/features/auction/data/repository/stream_repository_impl.dart';
+import 'package:streaming/features/auction/domain/stream_repository.dart';
 
 class ProductState extends ChangeNotifier {
   StreamRepository streamRep = StreamRepositoryImpl();

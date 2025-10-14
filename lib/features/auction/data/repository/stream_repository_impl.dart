@@ -1,15 +1,15 @@
 import 'dart:convert';
-import 'package:streaming/features/home/data/models/enums.dart';
+import 'package:streaming/shared/data/models/enums.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:streaming/core/resources/data_state.dart';
-import 'package:streaming/features/home/data/models/bidderDTO.dart';
-import 'package:streaming/features/home/data/models/productOfferDTO.dart';
-import 'package:streaming/features/home/data/models/stream.dart';
-import 'package:streaming/features/home/domain/stream_repository.dart';
+import 'package:streaming/features/auction/data/models/bidderDTO.dart';
+import 'package:streaming/features/auction/data/models/productOfferDTO.dart';
+import 'package:streaming/features/auction/data/models/stream.dart';
+import 'package:streaming/features/auction/domain/stream_repository.dart';
 import 'package:http/http.dart' as http;
 
 class StreamRepositoryImpl implements StreamRepository {
