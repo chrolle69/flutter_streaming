@@ -24,10 +24,8 @@ class StreamRepositoryImpl implements StreamRepository {
 
     streamList.get().then((snapshot) {
       if (snapshot.exists) {
-        print("\n\nSUCCESS\n\n");
         return DataSuccess(snapshot.children.length);
       } else {
-        print("\n\nNO SNAPSHOT\n\n");
         return DataError(Exception("snapshot does not exist"));
       }
     }).onError((error, stackTrace) => DataError(
@@ -49,7 +47,6 @@ class StreamRepositoryImpl implements StreamRepository {
           return StreamDTO.fromJson(json).toEntity();
         }).toList();
 
-        print(streams.first.toString());
         return DataSuccess(streams);
       } else {
         return DataError(Exception("Snapshot does not exist"));
@@ -62,7 +59,6 @@ class StreamRepositoryImpl implements StreamRepository {
 
   Stream toStreamObject(Object? value) {
     if (value is Map<dynamic, dynamic>) {
-      print("streamobject: $value");
       return StreamDTO.fromJson(convertDynamicMapToStringMap(value)).toEntity();
     } else {
       throw Exception("Invalid data type for StreamModel.fromJson");
@@ -79,7 +75,6 @@ class StreamRepositoryImpl implements StreamRepository {
       }
 
       StreamDTO newStream = await addRoom().then((id) {
-        print("after return");
         return StreamDTO(
             id: id.toString(),
             title: title,
@@ -109,7 +104,6 @@ class StreamRepositoryImpl implements StreamRepository {
       headers: {'Authorization': token},
     );
     //Destructuring the roomId from the response
-    print("before return");
     return json.decode(httpResponse.body)['roomId'];
   }
 
@@ -155,8 +149,6 @@ class StreamRepositoryImpl implements StreamRepository {
       double startPrice,
       double increase) {
     var uuid = Uuid().v1();
-    print("adding product offer");
-    print(type);
     var tmp = ProductOfferDTO(
         id: uuid,
         name: name,
@@ -212,7 +204,6 @@ class StreamRepositoryImpl implements StreamRepository {
 
   @override
   void addBid(String userId, String roomId, double bid, String productName) {
-    print("adding bid: $bid by user: $userId");
     final bidder = BidderDTO(id: userId, bid: bid).toJson();
     FirebaseDatabase.instance
         .ref()

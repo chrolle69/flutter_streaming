@@ -39,7 +39,6 @@ class AddStreamPageHelper extends StatelessWidget {
               heroTag: "fab1",
               child: Icon(Icons.arrow_back),
               onPressed: () {
-                print("going back");
                 onStreamAdded();
                 Navigator.pop(context);
               },
@@ -53,7 +52,6 @@ class AddStreamPageHelper extends StatelessWidget {
                 var dataState =
                     await Provider.of<AddStreamState>(context, listen: false)
                         .addStream();
-                print("going back");
                 if (dataState is DataSuccess) {
                   if (dataState.data is Stream) {
                     var stream = dataState.data as Stream;

@@ -20,7 +20,6 @@ class _StreamListPageState extends State<StreamListPage> with RouteAware {
 
   @override
   void initState() {
-    print("doing-init");
     super.initState();
     fetchStreams();
   }
@@ -29,16 +28,13 @@ class _StreamListPageState extends State<StreamListPage> with RouteAware {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final route = ModalRoute.of(context);
-    print("checkingPageRoute");
     if (route is PageRoute) {
-      print("isPageRoute");
       routeObserver.subscribe(this, route);
     }
   }
 
   @override
   void didPopNext() {
-    print("POPPED");
     // Refresh data when coming back to this page
     fetchStreams();
   }
@@ -50,11 +46,9 @@ class _StreamListPageState extends State<StreamListPage> with RouteAware {
   }
 
   Future<void> fetchStreams() async {
-    print("fetching");
     var result = await streamRep.getStreams();
     if (result is DataSuccess) {
       setState(() {
-        print(result.data.toString());
         data = result.data;
       });
     } else {

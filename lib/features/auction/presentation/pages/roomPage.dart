@@ -43,7 +43,6 @@ class _RoomPageState extends State<RoomPage> {
     });
 
     _room.on(Events.participantJoined, (Participant participant) {
-      print(participant.id);
       setState(
           () => participants.putIfAbsent(participant.id, () => participant));
     });
@@ -145,10 +144,8 @@ class _RoomPageState extends State<RoomPage> {
   }
 
   void endStream(Room room) {
-    print("Ending stream");
     streamRep.removeStreamById(room.id);
     for (Participant par in participants.values) {
-      print("removing: ${par.id}");
       par.remove();
     }
     room.end();

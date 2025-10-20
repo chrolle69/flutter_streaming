@@ -33,7 +33,6 @@ class ProductOffer extends Equatable {
   Bidder? getHighestBidder() {
     if (bidders.isEmpty) return null;
     bidders.sort((a, b) => b.bid.compareTo(a.bid));
-    print(bidders.first.bid);
     return bidders.first;
   }
 
