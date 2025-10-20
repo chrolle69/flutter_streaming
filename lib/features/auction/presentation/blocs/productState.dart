@@ -1,15 +1,16 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:streaming/features/auction/data/models/bidderDTO.dart';
 import 'package:streaming/features/auction/data/models/productOfferDTO.dart';
 import 'package:streaming/features/auction/data/repository/stream_repository_impl.dart';
+import 'package:streaming/features/auction/domain/entities/bidder.dart';
+import 'package:streaming/features/auction/domain/entities/productOffer.dart';
 import 'package:streaming/features/auction/domain/stream_repository.dart';
 
 class ProductState extends ChangeNotifier {
   StreamRepository streamRep = StreamRepositoryImpl();
   String roomId;
-  List<ProductOfferDTO> productList = [];
+  List<ProductOffer> productList = [];
 
   ProductState(this.roomId) {
     createListeners();
@@ -21,32 +22,30 @@ class ProductState extends ChangeNotifier {
     FirebaseDatabase.instance.ref().keepSynced(true);
 
     liveStreamRef.onChildAdded.listen((DatabaseEvent event) {
-      final data = event.snapshot.value;
-      print(data is Map<dynamic, dynamic>);
+      final data = Map<String, dynamic>.from(event.snapshot.value as Map);
 
-      var product = ProductOfferDTO.fromJson(data as Map<dynamic, dynamic>);
-      productList.add(product);
-      print(productList.first);
-      print("notifying lesteners");
+      var product = ProductOfferDTO.fromJson(data);
+      productList.add(product.toEntity());
+
       notifyListeners();
     });
 
     liveStreamRef.onChildChanged.listen((event) {
-      final data = event.snapshot.value;
-      var newP = ProductOfferDTO.fromJson(data as Map<dynamic, dynamic>);
+      final data = Map<String, dynamic>.from(event.snapshot.value as Map);
+      var newP = ProductOfferDTO.fromJson(data);
+
       var currentP = productList.firstWhere((p) => p.id == newP.id);
       int i = productList.indexOf(currentP);
       if (i == -1) {
-        productList.add(newP);
+        productList.add(newP.toEntity());
       } else {
-        productList[i] = newP;
+        productList[i] = newP.toEntity();
       }
-      print("notifying lesteners");
       notifyListeners();
     });
     liveStreamRef.onChildRemoved.listen((event) {
-      final data = event.snapshot.value;
-      var newP = ProductOfferDTO.fromJson(data as Map<dynamic, dynamic>);
+      final data = Map<String, dynamic>.from(event.snapshot.value as Map);
+      var newP = ProductOfferDTO.fromJson(data);
       var currentP = productList.firstWhere((p) => p.id == newP.id);
       int i = productList.indexOf(currentP);
       if (i != -1) {
@@ -54,23 +53,21 @@ class ProductState extends ChangeNotifier {
         notifyListeners();
       }
     });
-    print("---------- event happend ------------");
   }
 
   void addBid(double bid, String productName) {
     streamRep.addBid(getUser().uid, roomId, bid, productName);
-    print("...... placed bid");
   }
 
-  BidderDTO? highestBidder(ProductOfferDTO prod) {
-    return prod.highestBidder();
+  Bidder? highestBidder(ProductOffer prod) {
+    return prod.getHighestBidder();
   }
 
-  List<ProductOfferDTO> getProducts() {
+  List<ProductOffer> getProducts() {
     return productList;
   }
 
-  ProductOfferDTO getProduct(int i) {
+  ProductOffer getProduct(int i) {
     return productList[i];
   }
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:streaming/features/auction/data/models/productOfferDTO.dart';
+import 'package:streaming/features/auction/domain/entities/productOffer.dart';
 import 'package:streaming/features/auction/presentation/blocs/productState.dart';
 
 class ProductRowItemOwner extends StatelessWidget {
@@ -11,7 +11,7 @@ class ProductRowItemOwner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ProductOfferDTO prod = productState.getProduct(index);
+    final ProductOffer prod = productState.getProduct(index);
 
     return Card(
       child: Column(children: [
@@ -23,9 +23,9 @@ class ProductRowItemOwner extends StatelessWidget {
         ]),
         Text("Higest bid:"),
         Text(
-          prod.highestBidder() == null
+          prod.getHighestBidder() == null
               ? "no bids"
-              : "${prod.highestBidder()!.bid}",
+              : "${prod.getHighestBidder()!.bid}",
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 20,

@@ -1,23 +1,26 @@
+import 'package:json_annotation/json_annotation.dart';
 import 'package:streaming/features/auction/domain/entities/bidder.dart';
+part 'bidderDTO.g.dart';
 
-class BidderDTO extends Bidder {
+@JsonSerializable()
+class BidderDTO {
+  final String id;
+  final double bid;
+
   const BidderDTO({
-    required super.id,
-    required super.bid,
+    required this.id,
+    required this.bid,
   });
 
-  factory BidderDTO.fromJson(Map<dynamic, dynamic> data) {
-    print(",,,is doing fromjson");
-    // Handle bid value as int or double
-    double bid =
-        (data['bid'] is int) ? (data['bid'] as int).toDouble() : data['bid'];
+  // Map JSON → DTO
+  factory BidderDTO.fromJson(Map<String, dynamic> data) =>
+      _$BidderDTOFromJson(data);
 
-    var s = BidderDTO(id: data['id'], bid: bid);
-    return s;
+  // Map DTO → Domain Entity
+  Bidder toEntity() {
+    return Bidder(id: id, bid: bid);
   }
 
-  Map<String, dynamic> toJson() => {
-        "id": id,
-        "bid": bid,
-      };
+  // Map DTO → JSON (for API calls)
+  Map<String, dynamic> toJson() => _$BidderDTOToJson(this);
 }

@@ -1,5 +1,9 @@
 import 'dart:convert';
+import 'package:streaming/features/auction/domain/entities/bidder.dart';
+import 'package:streaming/features/auction/domain/entities/productOffer.dart';
+import 'package:streaming/features/auction/domain/entities/stream.dart';
 import 'package:streaming/shared/data/models/enums.dart';
+import 'package:streaming/utils/map_utils.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -8,7 +12,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:streaming/core/resources/data_state.dart';
 import 'package:streaming/features/auction/data/models/bidderDTO.dart';
 import 'package:streaming/features/auction/data/models/productOfferDTO.dart';
-import 'package:streaming/features/auction/data/models/stream.dart';
+import 'package:streaming/features/auction/data/models/streamDTO.dart';
 import 'package:streaming/features/auction/domain/stream_repository.dart';
 import 'package:http/http.dart' as http;
 
@@ -39,12 +43,14 @@ class StreamRepositoryImpl implements StreamRepository {
       var streamList = dbRef.child("liveStreams");
 
       var snapshot = await streamList.get();
-
       if (snapshot.exists) {
-        var data =
-            snapshot.children.map((e) => toStreamObject(e.value)).toList();
-        print(data.first.toString());
-        return DataSuccess(data);
+        var streams = snapshot.children.map((e) {
+          final json = convertDynamicMapToStringMap(e.value as Map);
+          return StreamDTO.fromJson(json).toEntity();
+        }).toList();
+
+        print(streams.first.toString());
+        return DataSuccess(streams);
       } else {
         return DataError(Exception("Snapshot does not exist"));
       }
@@ -54,10 +60,10 @@ class StreamRepositoryImpl implements StreamRepository {
     }
   }
 
-  StreamModel toStreamObject(Object? value) {
+  Stream toStreamObject(Object? value) {
     if (value is Map<dynamic, dynamic>) {
-      var s = StreamModel.fromJson(value);
-      return s; // Return the converted StreamModel object
+      print("streamobject: $value");
+      return StreamDTO.fromJson(convertDynamicMapToStringMap(value)).toEntity();
     } else {
       throw Exception("Invalid data type for StreamModel.fromJson");
     }
@@ -72,9 +78,9 @@ class StreamRepositoryImpl implements StreamRepository {
         throw Exception("User not logged in");
       }
 
-      StreamModel newStream = await addRoom().then((id) {
+      StreamDTO newStream = await addRoom().then((id) {
         print("after return");
-        return StreamModel(
+        return StreamDTO(
             id: id.toString(),
             title: title,
             description: description,
@@ -82,13 +88,13 @@ class StreamRepositoryImpl implements StreamRepository {
             thumbnail: "fake Thumbnail",
             owner: firebaseUser.uid,
             bidders: [],
-            productOffers: []);
+            productOffers: {});
       });
 
       var dbRef = FirebaseDatabase.instance.ref();
       var streamList = dbRef.child("liveStreams");
       await streamList.child(newStream.id).set(newStream.toJson());
-      return DataSuccess(newStream);
+      return DataSuccess(newStream.toEntity());
     } catch (e) {
       print("Error creating room: -$e-");
       return DataError(Exception(e));
@@ -171,7 +177,7 @@ class StreamRepositoryImpl implements StreamRepository {
   }
 
   @override
-  Future<List<ProductOfferDTO>> getProductOfferById(String id) async {
+  Future<List<ProductOffer>> getProductOfferById(String id) async {
     try {
       var streamSnapshot = await FirebaseDatabase.instance
           .ref()
@@ -180,10 +186,11 @@ class StreamRepositoryImpl implements StreamRepository {
           .child("productOffers")
           .get();
       if (streamSnapshot.exists) {
-        List<ProductOfferDTO> productOffers = streamSnapshot.children
-            .map((e) =>
-                ProductOfferDTO.fromJson(e.value as Map<dynamic, dynamic>))
-            .toList();
+        List<ProductOffer> productOffers = streamSnapshot.children.map((e) {
+          final json = convertDynamicMapToStringMap(e.value as Map);
+          return ProductOfferDTO.fromJson(json).toEntity();
+        }).toList();
+
         return productOffers;
       }
       throw Exception("No productOffers found");
@@ -205,6 +212,8 @@ class StreamRepositoryImpl implements StreamRepository {
 
   @override
   void addBid(String userId, String roomId, double bid, String productName) {
+    print("adding bid: $bid by user: $userId");
+    final bidder = BidderDTO(id: userId, bid: bid).toJson();
     FirebaseDatabase.instance
         .ref()
         .child("liveStreams")
@@ -212,8 +221,14 @@ class StreamRepositoryImpl implements StreamRepository {
         .child("productOffers")
         .child(productName)
         .child("bidders")
-        .child(userId)
-        .set(BidderDTO(id: userId, bid: bid).toJson());
+        .set([bidder]);
+
+    FirebaseDatabase.instance
+        .ref()
+        .child("liveStreams")
+        .child(roomId)
+        .child("bidders")
+        .set([bidder]);
   }
 
   @override
@@ -226,9 +241,10 @@ class StreamRepositoryImpl implements StreamRepository {
           .child("bidders")
           .get();
       if (streamSnapshot.exists) {
-        List<BidderDTO> bidderList = streamSnapshot.children
-            .map((e) => BidderDTO.fromJson(e.value as Map<dynamic, dynamic>))
-            .toList();
+        List<Bidder> bidderList = streamSnapshot.children.map((e) {
+          return BidderDTO.fromJson(e.value as Map<String, dynamic>).toEntity();
+        }).toList();
+
         bidderList.sort((a, b) => b.bid.compareTo(a.bid));
         return DataSuccess(bidderList.first);
       }

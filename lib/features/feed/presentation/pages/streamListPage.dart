@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:streaming/core/resources/data_state.dart';
-import 'package:streaming/features/auction/data/models/stream.dart';
+import 'package:streaming/features/auction/domain/entities/stream.dart';
 import 'package:streaming/features/auction/data/repository/stream_repository_impl.dart';
 import 'package:streaming/features/auction/domain/stream_repository.dart';
 import 'package:streaming/features/auction/presentation/pages/addStreamPage.dart';
@@ -16,7 +16,7 @@ class StreamListPage extends StatefulWidget {
 
 class _StreamListPageState extends State<StreamListPage> with RouteAware {
   StreamRepository streamRep = StreamRepositoryImpl();
-  List<StreamModel> data = [];
+  List<Stream> data = [];
 
   @override
   void initState() {

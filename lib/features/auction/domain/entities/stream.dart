@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
-import 'package:streaming/features/auction/data/models/bidderDTO.dart';
+import 'package:streaming/features/auction/domain/entities/bidder.dart';
+import 'package:streaming/features/auction/domain/entities/productOffer.dart';
 import 'package:streaming/shared/data/models/enums.dart';
-import 'package:streaming/features/auction/data/models/productOfferDTO.dart';
 
 class Stream extends Equatable {
   final String id;
@@ -10,8 +10,8 @@ class Stream extends Equatable {
   final List<ProductType> productTypes;
   final String thumbnail;
   final String owner;
-  final List<BidderDTO> bidders;
-  final List<ProductOfferDTO> productOffers;
+  final List<Bidder> bidders;
+  final List<ProductOffer> productOffers;
 
   const Stream({
     required this.id,

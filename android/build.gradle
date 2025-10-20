@@ -9,9 +9,19 @@ rootProject.buildDir = '../build'
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
+subprojects { subproject ->
+    afterEvaluate {
+        if (subproject.hasProperty("android")) {
+            android {
+                compileSdkVersion 36
+            }
+        }
+    }
+}
 subprojects {
     project.evaluationDependsOn(':app')
 }
+
 
 tasks.register("clean", Delete) {
     delete rootProject.buildDir

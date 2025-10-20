@@ -1,9 +1,12 @@
 // ignore_for_file: constant_identifier_names
 
 import 'package:flutter/material.dart';
+import 'package:json_annotation/json_annotation.dart';
 
+@JsonEnum()
 enum ProductType { shirt, jacket, pants, shoes, bag, other }
 
+@JsonEnum()
 enum SimpleColor {
   white('White', Colors.white),
   black('Black', Colors.black),
@@ -28,4 +31,5 @@ enum SimpleColor {
   const SimpleColor(this.name, this.color);
 }
 
+@JsonEnum()
 enum ClothingSize { XXXS, XXS, XS, S, M, L, XL, XXL, XXXL }

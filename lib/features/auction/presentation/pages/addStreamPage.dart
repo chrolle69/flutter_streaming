@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:streaming/core/resources/data_state.dart';
-import 'package:streaming/features/auction/data/models/stream.dart';
+import 'package:streaming/features/auction/domain/entities/stream.dart';
 import 'package:streaming/features/auction/presentation/blocs/addStreamState.dart';
 import 'package:streaming/features/auction/presentation/pages/roomPage.dart';
 import 'package:streaming/features/auction/presentation/widgets/addStreamForm.dart';
@@ -55,8 +55,8 @@ class AddStreamPageHelper extends StatelessWidget {
                         .addStream();
                 print("going back");
                 if (dataState is DataSuccess) {
-                  if (dataState.data is StreamModel) {
-                    var stream = dataState.data as StreamModel;
+                  if (dataState.data is Stream) {
+                    var stream = dataState.data as Stream;
                     navigator.push(MaterialPageRoute(
                         builder: (context) => RoomPage(
                             roomId: stream.id, onFetchStreams: onStreamAdded)));

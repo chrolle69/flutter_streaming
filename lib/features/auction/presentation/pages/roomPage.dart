@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:streaming/core/resources/data_state.dart';
-import 'package:streaming/features/auction/data/models/stream.dart';
+import 'package:streaming/features/auction/domain/entities/stream.dart';
 import 'package:streaming/features/auction/data/repository/stream_repository_impl.dart';
 import 'package:streaming/features/auction/domain/stream_repository.dart';
 import 'package:streaming/features/auction/presentation/widgets/OwnerPanel.dart';
 import 'package:streaming/features/auction/presentation/widgets/ViewerPanel.dart';
 import 'package:streaming/features/auction/presentation/widgets/participanTile.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:videosdk/videosdk.dart';
+import 'package:videosdk/videosdk.dart' hide Stream;
 
 class RoomPage extends StatefulWidget {
   const RoomPage(
@@ -126,16 +126,16 @@ class _RoomPageState extends State<RoomPage> {
 
   Future<void> setOwnerId() async {
     try {
-      StreamModel streamModel = await getStreamById(widget.roomId);
+      Stream stream = await getStreamById(widget.roomId);
       setState(() {
-        ownerId = streamModel.owner;
+        ownerId = stream.owner;
       });
     } catch (e) {
       print("Error setting ownerId: $e");
     }
   }
 
-  Future<StreamModel> getStreamById(String roomId) async {
+  Future<Stream> getStreamById(String roomId) async {
     var dataState = await streamRep.getStreamById(roomId);
     if (dataState is DataSuccess) {
       return dataState.data;

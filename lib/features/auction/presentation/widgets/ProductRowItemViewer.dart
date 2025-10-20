@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:streaming/features/auction/data/models/productOfferDTO.dart';
+import 'package:streaming/features/auction/domain/entities/productOffer.dart';
 import 'package:streaming/features/auction/presentation/blocs/productState.dart';
 
 class ProductRowItemViewer extends StatelessWidget {
@@ -14,7 +14,7 @@ class ProductRowItemViewer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ProductOfferDTO prod = productState.getProduct(index);
+    final ProductOffer prod = productState.getProduct(index);
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,

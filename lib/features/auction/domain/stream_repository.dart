@@ -1,6 +1,6 @@
 import 'package:streaming/core/resources/data_state.dart';
+import 'package:streaming/features/auction/domain/entities/productOffer.dart';
 import 'package:streaming/shared/data/models/enums.dart';
-import 'package:streaming/features/auction/data/models/productOfferDTO.dart';
 
 abstract class StreamRepository {
   DataState getAmountOfStreams();
@@ -17,7 +17,7 @@ abstract class StreamRepository {
   void addProductOffer(String id, String name, String descr, ProductType type,
       ClothingSize size, SimpleColor color, double startPrice, double increase);
 
-  Future<List<ProductOfferDTO>> getProductOfferById(String id);
+  Future<List<ProductOffer>> getProductOfferById(String id);
 
   void removeProductOfferById(String id);
 
