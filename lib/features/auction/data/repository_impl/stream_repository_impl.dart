@@ -3,7 +3,7 @@ import 'package:streaming/features/auction/domain/entities/bidder.dart';
 import 'package:streaming/features/auction/domain/entities/productOffer.dart';
 import 'package:streaming/features/auction/domain/entities/stream.dart';
 import 'package:streaming/shared/data/models/enums.dart';
-import 'package:streaming/utils/map_utils.dart';
+import 'package:streaming/core/util/map_utils.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -13,7 +13,7 @@ import 'package:streaming/core/resources/data_state.dart';
 import 'package:streaming/features/auction/data/models/bidderDTO.dart';
 import 'package:streaming/features/auction/data/models/productOfferDTO.dart';
 import 'package:streaming/features/auction/data/models/streamDTO.dart';
-import 'package:streaming/features/auction/domain/stream_repository.dart';
+import 'package:streaming/features/auction/domain/repository/stream_repository.dart';
 import 'package:http/http.dart' as http;
 
 class StreamRepositoryImpl implements StreamRepository {
@@ -49,7 +49,8 @@ class StreamRepositoryImpl implements StreamRepository {
 
         return DataSuccess(streams);
       } else {
-        return DataError(Exception("Snapshot does not exist"));
+        print("No snapshot exists");
+        return DataSuccess(<Stream>[]);
       }
     } catch (e) {
       print("Error fetching streams: $e");
@@ -126,15 +127,17 @@ class StreamRepositoryImpl implements StreamRepository {
   }
 
   @override
-  void removeStreamById(String roomId) {
+  Future<DataState> removeStreamById(String roomId) async {
     try {
-      FirebaseDatabase.instance
+      await FirebaseDatabase.instance
           .ref()
           .child("liveStreams")
           .child(roomId)
           .remove();
+      return DataSuccess(true);
     } catch (e) {
       print("Error removing stream: $e");
+      return DataError(Exception("Failed to remove live stream by ID"));
     }
   }
 

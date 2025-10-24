@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:streaming/features/auction/domain/repository/stream_repository.dart';
 import 'package:streaming/features/auction/presentation/blocs/productState.dart';
 import 'package:streaming/features/auction/presentation/widgets/BidButton.dart';
 import 'package:streaming/features/auction/presentation/widgets/ProductRowItemViewer.dart';
@@ -47,7 +48,10 @@ class _ViewerPanelState extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return ChangeNotifierProvider(
-          create: (_) => ProductState(roomId),
+          create: (_) => ProductState(
+            streamRep: Provider.of<StreamRepository>(context, listen: false),
+            roomId: roomId,
+          ),
           child: Consumer<ProductState>(
             builder: (context, productState, child) {
               return SizedBox(

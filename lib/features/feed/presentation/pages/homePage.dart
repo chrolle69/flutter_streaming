@@ -22,6 +22,8 @@ class _HomePageState extends State<HomePage> {
         wid = StreamListPage();
       case 2:
         wid = StreamListPage();
+      default:
+        wid = StreamListPage();
     }
 
     return Scaffold(

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:streaming/shared/data/models/enums.dart';
-import 'package:streaming/features/auction/data/repository/stream_repository_impl.dart';
-import 'package:streaming/features/auction/domain/stream_repository.dart';
+import 'package:streaming/features/auction/domain/repository/stream_repository.dart';
 import 'package:streaming/features/auction/presentation/blocs/productState.dart';
 import 'package:streaming/features/auction/presentation/widgets/ProductDialog_PickColor.dart';
 import 'package:streaming/features/auction/presentation/widgets/ProductDialog_PickDescr.dart';
@@ -59,7 +58,8 @@ class _OwnerPanelState extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return ChangeNotifierProvider(
-          create: (_) => ProductState(roomId),
+          create: (context) => ProductState(
+              roomId: roomId, streamRep: context.read<StreamRepository>()),
           child: Consumer<ProductState>(
             builder: (context, productState, child) {
               return SizedBox(
@@ -96,7 +96,7 @@ Future<void> _dialogBuilder(BuildContext context, String roomId) {
   ProductType productType = ProductType.other;
   SimpleColor color = SimpleColor.other;
   ClothingSize size = ClothingSize.M;
-  StreamRepository streamRep = StreamRepositoryImpl();
+  ProductState productBloc = context.read<ProductState>();
 
   void setName(String newName) {
     productName = newName;
@@ -158,15 +158,18 @@ Future<void> _dialogBuilder(BuildContext context, String roomId) {
                 textStyle: Theme.of(context).textTheme.labelLarge,
               ),
               child: const Text('Confirm'),
-              onPressed: () {
-                try {
-                  streamRep.addProductOffer(roomId, productName, productDescr,
-                      productType, size, color, startPrice, increase);
-                } catch (e) {
-                  print("Error: $e");
-                  return;
-                }
-                Navigator.of(context).pop();
+              onPressed: () async {
+                final navigator = Navigator.of(context);
+                final isSuccess = await productBloc.addProductOffer(
+                    roomId,
+                    productName,
+                    productDescr,
+                    productType,
+                    size,
+                    color,
+                    startPrice,
+                    increase);
+                if (isSuccess) navigator.pop;
               },
             ),
           ],

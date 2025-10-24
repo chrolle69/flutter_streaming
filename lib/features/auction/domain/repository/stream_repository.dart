@@ -12,7 +12,7 @@ abstract class StreamRepository {
   Future<DataState> addStream(
       String title, String description, List<ProductType> types);
 
-  void removeStreamById(String roomId);
+  Future<DataState> removeStreamById(String roomId);
 
   void addProductOffer(String id, String name, String descr, ProductType type,
       ClothingSize size, SimpleColor color, double startPrice, double increase);

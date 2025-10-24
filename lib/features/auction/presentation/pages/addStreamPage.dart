@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:streaming/core/resources/data_state.dart';
-import 'package:streaming/features/auction/domain/entities/stream.dart';
-import 'package:streaming/features/auction/presentation/blocs/addStreamState.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:streaming/features/auction/presentation/blocs/streamBloc.dart';
+import 'package:streaming/features/auction/presentation/blocs/streamEvent.dart';
+import 'package:streaming/features/auction/presentation/blocs/streamState.dart';
 import 'package:streaming/features/auction/presentation/pages/roomPage.dart';
 import 'package:streaming/features/auction/presentation/widgets/addStreamForm.dart';
 
@@ -12,26 +12,24 @@ class AddStreamPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (BuildContext context) => AddStreamState(),
-      child: AddStreamPageHelper(
-        onStreamAdded: onStreamAdded,
-      ),
-    );
-  }
-}
-
-//used so that the provider is initialzed before it is used
-class AddStreamPageHelper extends StatelessWidget {
-  const AddStreamPageHelper({super.key, required this.onStreamAdded});
-  final Function onStreamAdded;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: AddStreamForm(),
-      floatingActionButton: Builder(
-        builder: (context) => Row(
+    return BlocListener<StreamBloc, StreamState>(
+      listenWhen: (previous, current) {
+        // Only listen if selectedStream changes to non-null
+        return previous.selectedStream != current.selectedStream &&
+            current.selectedStream != null;
+      },
+      listener: (context, state) {
+        final stream = state.selectedStream!;
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => RoomPage(
+            roomId: stream.id,
+            onFetchStreams: onStreamAdded,
+          ),
+        ));
+      },
+      child: Scaffold(
+        body: AddStreamForm(),
+        floatingActionButton: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -47,21 +45,10 @@ class AddStreamPageHelper extends StatelessWidget {
             FloatingActionButton(
               heroTag: "fab2",
               child: Icon(Icons.add),
-              onPressed: () async {
-                final navigator = Navigator.of(context);
-                var dataState =
-                    await Provider.of<AddStreamState>(context, listen: false)
-                        .addStream();
-                if (dataState is DataSuccess) {
-                  if (dataState.data is Stream) {
-                    var stream = dataState.data as Stream;
-                    navigator.push(MaterialPageRoute(
-                        builder: (context) => RoomPage(
-                            roomId: stream.id, onFetchStreams: onStreamAdded)));
-                  }
-                }
+              onPressed: () {
+                context.read<StreamBloc>().add(AddStreamEvent());
               },
-            )
+            ),
           ],
         ),
       ),

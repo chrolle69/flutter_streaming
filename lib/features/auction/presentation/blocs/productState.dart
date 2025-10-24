@@ -2,17 +2,17 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:streaming/features/auction/data/models/productOfferDTO.dart';
-import 'package:streaming/features/auction/data/repository/stream_repository_impl.dart';
 import 'package:streaming/features/auction/domain/entities/bidder.dart';
 import 'package:streaming/features/auction/domain/entities/productOffer.dart';
-import 'package:streaming/features/auction/domain/stream_repository.dart';
+import 'package:streaming/features/auction/domain/repository/stream_repository.dart';
+import 'package:streaming/shared/data/models/enums.dart';
 
 class ProductState extends ChangeNotifier {
-  StreamRepository streamRep = StreamRepositoryImpl();
+  final StreamRepository streamRep;
   String roomId;
   List<ProductOffer> productList = [];
 
-  ProductState(this.roomId) {
+  ProductState({required this.roomId, required this.streamRep}) {
     createListeners();
   }
 
@@ -69,6 +69,25 @@ class ProductState extends ChangeNotifier {
 
   ProductOffer getProduct(int i) {
     return productList[i];
+  }
+
+  Future<bool> addProductOffer(
+      String roomId,
+      String productName,
+      String productDescr,
+      ProductType productType,
+      ClothingSize size,
+      SimpleColor color,
+      double startPrice,
+      double increase) async {
+    try {
+      streamRep.addProductOffer(roomId, productName, productDescr, productType,
+          size, color, startPrice, increase);
+      return true;
+    } catch (e) {
+      print("Error: $e");
+      return false;
+    }
   }
 
   User getUser() {

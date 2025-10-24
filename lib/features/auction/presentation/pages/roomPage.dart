@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:streaming/core/resources/data_state.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:streaming/features/auction/domain/entities/stream.dart';
-import 'package:streaming/features/auction/data/repository/stream_repository_impl.dart';
-import 'package:streaming/features/auction/domain/stream_repository.dart';
+import 'package:streaming/features/auction/presentation/blocs/streamBloc.dart';
+import 'package:streaming/features/auction/presentation/blocs/streamEvent.dart';
+import 'package:streaming/features/auction/presentation/blocs/streamState.dart';
 import 'package:streaming/features/auction/presentation/widgets/OwnerPanel.dart';
 import 'package:streaming/features/auction/presentation/widgets/ViewerPanel.dart';
 import 'package:streaming/features/auction/presentation/widgets/participanTile.dart';
@@ -25,12 +26,15 @@ class _RoomPageState extends State<RoomPage> {
   String? ownerId;
   String? joined;
   Map<String, Participant> participants = {};
-  StreamRepository streamRep = StreamRepositoryImpl();
+  bool _roomCreated = false;
 
   @override
   void initState() {
     super.initState();
-    createRoom();
+    context.read<StreamBloc>().add(FetchStreamByIdEvent(roomId: widget.roomId));
+    context
+        .read<StreamBloc>()
+        .add(CheckStreamAvailableEvent(roomId: widget.roomId));
   }
 
   void setRoomEventListener() {
@@ -57,6 +61,7 @@ class _RoomPageState extends State<RoomPage> {
     });
 
     _room.on(Events.roomLeft, () {
+      if (!mounted) return;
       if (isOwner(getUser().uid)) {
         endStream(_room);
       }
@@ -67,52 +72,76 @@ class _RoomPageState extends State<RoomPage> {
   }
 
   void popPage() {
+    if (!mounted) return;
     Navigator.pop(context);
-  }
-
-  void _onWillPop(bool? b) async {
-    _room.leave();
   }
 
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      onPopInvoked: _onWillPop,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('VideoSDK QuickStart'),
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(0),
-                child: joined != null
-                    ? joined == "JOINED"
-                        ? Container(
-                            height: MediaQuery.of(context).size.height * 0.80,
-                            child: ParticipantTile(
-                                participant: participants.values.firstWhere(
-                                    (participant) =>
-                                        participant.id == ownerId)),
-                          )
-                        : const Text("JOINING the Room",
-                            style: TextStyle(color: Colors.white))
-                    : Card(
-                        child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Text(isOwner(getUser().uid)
-                            ? "Creating Live Stream"
-                            : "Joining Live Stream"),
-                      )),
-              ),
-              joined != null
-                  ? isOwner(getUser().uid)
-                      ? OwnerPanel(roomId: widget.roomId)
-                      : ViewerPanel(roomId: widget.roomId)
-                  : SizedBox(),
-            ],
+      canPop: true,
+      onPopInvokedWithResult: (bool didPop, Object? result) async {
+        _room.leave();
+      },
+      child: BlocListener<StreamBloc, StreamState>(
+        listener: (context, state) {
+          if (state.status == StreamStatus.success &&
+              state.selectedStream != null &&
+              !_roomCreated) {
+            _roomCreated = true;
+            ownerId = state.selectedStream!.owner;
+            bool amOwner = ownerId == getUser().uid;
+
+            _room = VideoSDK.createRoom(
+              roomId: widget.roomId,
+              token: dotenv.env['VIDEOSDK_TOKEN']!,
+              displayName: amOwner
+                  ? "Host: ${getUser().displayName ?? "Anonymous"}"
+                  : "Viewer: ${getUser().displayName ?? "Anonymous"}",
+              micEnabled: false,
+              camEnabled: amOwner,
+              participantId: getUser().uid,
+              defaultCameraIndex: 1,
+            );
+
+            setRoomEventListener();
+            _room.join();
+          }
+        },
+        child: Scaffold(
+          appBar: AppBar(title: const Text("VideoSDK QuickStart")),
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(0),
+                  child: joined != null
+                      ? joined == "JOINED"
+                          ? Container(
+                              height: MediaQuery.of(context).size.height * 0.80,
+                              child: ParticipantTile(
+                                  participant: participants.values.firstWhere(
+                                      (participant) =>
+                                          participant.id == ownerId)),
+                            )
+                          : const Text("JOINING the Room",
+                              style: TextStyle(color: Colors.white))
+                      : Card(
+                          child: Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Text(isOwner(getUser().uid)
+                              ? "Creating Live Stream"
+                              : "Joining Live Stream"),
+                        )),
+                ),
+                joined != null
+                    ? isOwner(getUser().uid)
+                        ? OwnerPanel(roomId: widget.roomId)
+                        : ViewerPanel(roomId: widget.roomId)
+                    : SizedBox(),
+              ],
+            ),
           ),
         ),
       ),
@@ -125,7 +154,9 @@ class _RoomPageState extends State<RoomPage> {
 
   Future<void> setOwnerId() async {
     try {
-      Stream stream = await getStreamById(widget.roomId);
+      print(widget.roomId);
+      var stream = context.read<StreamBloc>().state.selectedStream!;
+      print("Fetched stream owner: ${stream.owner}");
       setState(() {
         ownerId = stream.owner;
       });
@@ -134,82 +165,29 @@ class _RoomPageState extends State<RoomPage> {
     }
   }
 
-  Future<Stream> getStreamById(String roomId) async {
-    var dataState = await streamRep.getStreamById(roomId);
-    if (dataState is DataSuccess) {
-      return dataState.data;
-    } else {
-      throw Exception("Data failure while fetching stream");
-    }
-  }
-
   void endStream(Room room) {
-    streamRep.removeStreamById(room.id);
+    context
+        .read<StreamBloc>()
+        .add(RemoveStreamByIdEvent(roomId: widget.roomId));
     for (Participant par in participants.values) {
       par.remove();
     }
     room.end();
   }
 
-  void createRoom() async {
+  Future<String?> getOwnerId() async {
     try {
-      await checkStreamAvailable(widget.roomId);
-      await setOwnerId();
-      await dotenv.load(fileName: ".env");
-      var firebaseUser = getUser();
-      print("Checking if owner");
-      print(isOwner(firebaseUser.uid));
-      if (isOwner(firebaseUser.uid)) {
-        print("Is owner");
-        _room = VideoSDK.createRoom(
-          roomId: widget.roomId,
-          token: dotenv.env['VIDEOSDK_TOKEN']!,
-          displayName: "Host: ${firebaseUser.displayName ?? "Anonymous"}",
-          micEnabled: false,
-          camEnabled: true,
-          participantId: firebaseUser.uid,
-          defaultCameraIndex: 1,
-        );
-        print("Room created");
-      } else {
-        print("Is viewer");
-        _room = VideoSDK.createRoom(
-          roomId: widget.roomId,
-          token: dotenv.env['VIDEOSDK_TOKEN']!,
-          displayName: "Viewer: ${firebaseUser.displayName ?? "Anonymous"}",
-          micEnabled: false,
-          camEnabled: false,
-          participantId: firebaseUser.uid,
-          defaultCameraIndex: 1,
-        );
-      }
+      Stream stream = context.read<StreamBloc>().state.selectedStream!;
+      return stream.owner; // return it directly
     } catch (e) {
-      print("No account");
-      _room = VideoSDK.createRoom(
-        roomId: widget.roomId,
-        token: dotenv.env['VIDEOSDK_TOKEN']!,
-        displayName: "No account",
-        micEnabled: false,
-        camEnabled: false,
-        defaultCameraIndex: 1,
-      );
-    }
-    setRoomEventListener();
-    _room.join();
-  }
-
-  checkStreamAvailable(String roomId) async {
-    try {
-      await getStreamById(roomId);
-    } catch (e) {
-      print("Stream not available");
-      popPage();
+      print("Error fetching ownerId: $e");
+      return null;
     }
   }
-}
 
-User getUser() {
-  var user = FirebaseAuth.instance.currentUser;
-  if (user == null) throw Exception("ID not found");
-  return user;
+  User getUser() {
+    var user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception("ID not found");
+    return user;
+  }
 }

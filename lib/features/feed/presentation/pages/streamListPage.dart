@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:streaming/core/resources/data_state.dart';
-import 'package:streaming/features/auction/domain/entities/stream.dart';
-import 'package:streaming/features/auction/data/repository/stream_repository_impl.dart';
-import 'package:streaming/features/auction/domain/stream_repository.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:streaming/features/auction/presentation/blocs/streamBloc.dart';
+import 'package:streaming/features/auction/presentation/blocs/streamEvent.dart';
+import 'package:streaming/features/auction/presentation/blocs/streamState.dart';
 import 'package:streaming/features/auction/presentation/pages/addStreamPage.dart';
 import 'package:streaming/features/auction/presentation/pages/roomPage.dart';
 import 'package:streaming/routeObserver.dart';
@@ -15,13 +15,9 @@ class StreamListPage extends StatefulWidget {
 }
 
 class _StreamListPageState extends State<StreamListPage> with RouteAware {
-  StreamRepository streamRep = StreamRepositoryImpl();
-  List<Stream> data = [];
-
   @override
   void initState() {
     super.initState();
-    fetchStreams();
   }
 
   @override
@@ -36,7 +32,7 @@ class _StreamListPageState extends State<StreamListPage> with RouteAware {
   @override
   void didPopNext() {
     // Refresh data when coming back to this page
-    fetchStreams();
+    context.read<StreamBloc>().add(FetchStreamsEvent());
   }
 
   @override
@@ -45,60 +41,84 @@ class _StreamListPageState extends State<StreamListPage> with RouteAware {
     super.dispose();
   }
 
-  Future<void> fetchStreams() async {
-    var result = await streamRep.getStreams();
-    if (result is DataSuccess) {
-      setState(() {
-        data = result.data;
-      });
-    } else {
-      setState(() {
-        data = [];
-      });
-      throw Exception(result.error);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: RefreshIndicator(
-        onRefresh: fetchStreams,
-        child: ListView.builder(
-          itemCount: data.length,
-          itemBuilder: (BuildContext context, int position) {
-            return GestureDetector(
-              child: Card(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Image(
-                      height: 100,
-                      width: 100,
-                      image:
-                          const AssetImage('assets/images/default_image.jpg'),
-                    ),
-                    Text(data[position].title),
+    final streamBloc = context.read<StreamBloc>();
+
+    return BlocListener<StreamBloc, StreamState>(
+      listener: (context, state) {
+        // Show errors with SnackBar if needed
+        if (state.status == StreamStatus.failure &&
+            state.errorMessage != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.errorMessage!)),
+          );
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(title: const Text("Live Streams")),
+        body: BlocBuilder<StreamBloc, StreamState>(
+          builder: (context, state) {
+            if (state.status == StreamStatus.loading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (state.streams.isEmpty) {
+              return RefreshIndicator(
+                onRefresh: () async => streamBloc.add(FetchStreamsEvent()),
+                child: ListView(
+                  children: const [
+                    SizedBox(height: 200),
+                    Center(child: Text("No streams available")),
                   ],
                 ),
+              );
+            }
+
+            return RefreshIndicator(
+              onRefresh: () async => streamBloc.add(FetchStreamsEvent()),
+              child: ListView.builder(
+                itemCount: state.streams.length,
+                itemBuilder: (context, idx) {
+                  final stream = state.streams[idx];
+                  return GestureDetector(
+                    child: Card(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Image(
+                            height: 100,
+                            width: 100,
+                            image: const AssetImage(
+                                'assets/images/default_image.jpg'),
+                          ),
+                          Text(stream.title),
+                        ],
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (_) => RoomPage(
+                                roomId: stream.id,
+                                onFetchStreams: () =>
+                                    streamBloc.add(FetchStreamsEvent()),
+                              )));
+                    },
+                  );
+                },
               ),
-              onTap: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => RoomPage(
-                        roomId: data[position].id,
-                        onFetchStreams: fetchStreams)));
-              },
             );
           },
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
-        onPressed: () {
-          Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) =>
-                  AddStreamPage(onStreamAdded: fetchStreams)));
-        },
+        floatingActionButton: FloatingActionButton(
+          child: const Icon(Icons.add),
+          onPressed: () {
+            Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => AddStreamPage(onStreamAdded: () {
+                      streamBloc.add(FetchStreamsEvent());
+                    })));
+          },
+        ),
       ),
     );
   }
