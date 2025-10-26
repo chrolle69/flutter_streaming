@@ -142,7 +142,7 @@ class StreamRepositoryImpl implements StreamRepository {
   }
 
   @override
-  void addProductOffer(
+  Future<DataState> addProductOffer(
       String id,
       String name,
       String descr,
@@ -150,25 +150,37 @@ class StreamRepositoryImpl implements StreamRepository {
       ClothingSize size,
       SimpleColor color,
       double startPrice,
-      double increase) {
+      double increase) async {
     var uuid = Uuid().v1();
-    var tmp = ProductOfferDTO(
-        id: uuid,
-        name: name,
-        descr: descr,
-        type: type,
-        size: size,
-        color: color,
-        startPrice: startPrice,
-        increase: increase,
-        bidders: []).toJson();
-    FirebaseDatabase.instance
-        .ref()
-        .child("liveStreams")
-        .child(id)
-        .child("productOffers")
-        .child(name)
-        .set(tmp);
+    var tmp = {};
+    try {
+      tmp = ProductOfferDTO(
+          id: uuid,
+          name: name,
+          descr: descr,
+          type: type,
+          size: size,
+          color: color,
+          startPrice: startPrice,
+          increase: increase,
+          bidders: []).toJson();
+    } catch (e) {
+      print("Error creating product offer: $e");
+      return DataError(Exception("Failed to create product offer"));
+    }
+    try {
+      FirebaseDatabase.instance
+          .ref()
+          .child("liveStreams")
+          .child(id)
+          .child("productOffers")
+          .child(name)
+          .set(tmp);
+    } catch (e) {
+      print("Error adding product offer: $e");
+      return DataError(Exception("Failed to add product offer"));
+    }
+    return DataSuccess(true);
   }
 
   @override

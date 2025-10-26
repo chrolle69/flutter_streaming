@@ -69,6 +69,7 @@ class _RoomPageState extends State<RoomPage> {
       participants.clear();
       popPage();
     });
+    print(widget.roomId + "-----fetch roomid-----");
   }
 
   void popPage() {
@@ -103,7 +104,6 @@ class _RoomPageState extends State<RoomPage> {
               participantId: getUser().uid,
               defaultCameraIndex: 1,
             );
-
             setRoomEventListener();
             _room.join();
           }
@@ -154,7 +154,6 @@ class _RoomPageState extends State<RoomPage> {
 
   Future<void> setOwnerId() async {
     try {
-      print(widget.roomId);
       var stream = context.read<StreamBloc>().state.selectedStream!;
       print("Fetched stream owner: ${stream.owner}");
       setState(() {

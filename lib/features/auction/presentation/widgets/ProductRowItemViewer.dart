@@ -14,7 +14,7 @@ class ProductRowItemViewer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ProductOffer prod = productState.getProduct(index);
+    final ProductOffer prod = productState.products[index];
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,

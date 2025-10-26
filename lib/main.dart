@@ -4,7 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:streaming/core/util/appBlocObserver.dart';
 import 'package:streaming/features/auction/data/repository_impl/stream_repository_impl.dart';
-import 'package:streaming/features/auction/presentation/blocs/productState.dart';
+import 'package:streaming/features/auction/domain/repository/stream_repository.dart';
+import 'package:streaming/features/auction/presentation/blocs/productBloc.dart';
 import 'package:streaming/features/auction/presentation/blocs/streamBloc.dart';
 import 'package:streaming/features/auth/presentation/pages/login.dart';
 import 'package:streaming/routeObserver.dart';
@@ -16,17 +17,21 @@ Future<void> main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await dotenv.load(fileName: ".env");
 
-  final streamRepo = StreamRepositoryImpl();
   Bloc.observer = AppBlocObserver(); // 🔹 Add this line
 
   runApp(
-    MultiProvider(
-      providers: [
-        BlocProvider(create: (_) => StreamBloc(streamRep: streamRepo)),
-        ChangeNotifierProvider(
-            create: (_) => ProductState(roomId: '', streamRep: streamRepo)),
-      ],
-      child: const MyApp(),
+    Provider<StreamRepository>(
+      create: (_) => StreamRepositoryImpl(),
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+              create: (_) => StreamBloc(streamRep: _.read<StreamRepository>())),
+          // BlocProvider(
+          //     create: (_) =>
+          //         ProductBloc(streamRep: _.read<StreamRepository>())),
+        ],
+        child: const MyApp(),
+      ),
     ),
   );
 }

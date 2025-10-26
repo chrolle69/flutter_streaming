@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:streaming/shared/data/models/enums.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:streaming/features/auction/domain/repository/stream_repository.dart';
+import 'package:streaming/features/auction/presentation/blocs/productEvent.dart';
+import 'package:streaming/shared/data/models/enums.dart';
+import 'package:streaming/features/auction/presentation/blocs/productBloc.dart';
 import 'package:streaming/features/auction/presentation/blocs/productState.dart';
 import 'package:streaming/features/auction/presentation/widgets/ProductDialog_PickColor.dart';
 import 'package:streaming/features/auction/presentation/widgets/ProductDialog_PickDescr.dart';
@@ -13,74 +15,99 @@ import 'package:streaming/features/auction/presentation/widgets/ProductDialog_Pi
 import 'package:streaming/features/auction/presentation/widgets/ProductRowItemOwner.dart';
 
 class OwnerPanel extends StatelessWidget {
-  const OwnerPanel({
-    super.key,
-    required this.roomId,
-  });
+  const OwnerPanel({super.key, required this.roomId});
   final String roomId;
-
-  @override
-  Widget build(BuildContext context) {
-    return _OwnerPanelState(roomId: roomId);
-  }
-}
-
-class _OwnerPanelState extends StatelessWidget {
-  final String roomId;
-  const _OwnerPanelState({required this.roomId});
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
       child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: FloatingActionButton(
-                  child: Text("Add Product"),
-                  onPressed: () => _dialogBuilder(context, roomId)),
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Expanded(
+            child: FloatingActionButton(
+              child: Text("Add Product"),
+              onPressed: () => _showAddProductDialog(context),
             ),
-            Expanded(
-              child: FloatingActionButton(
-                child: Text("Show Products"),
-                onPressed: () {
-                  showBottomSheetOwner(context, roomId);
-                },
-              ),
+          ),
+          Expanded(
+            child: FloatingActionButton(
+              child: Text("Show Products"),
+              onPressed: () => _showProductsBottomSheet(context),
             ),
-          ]),
+          ),
+        ],
+      ),
     );
   }
 
-  Future<void> showBottomSheetOwner(BuildContext context, String roomId) async {
+  void _showProductsBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      builder: (BuildContext context) {
-        return ChangeNotifierProvider(
-          create: (context) => ProductState(
-              roomId: roomId, streamRep: context.read<StreamRepository>()),
-          child: Consumer<ProductState>(
-            builder: (context, productState, child) {
-              return SizedBox(
-                height: 500,
-                width: MediaQuery.of(context).size.width,
-                child: productState.getProducts().isEmpty
-                    ? Center(child: Text("No Products Added"))
-                    : ListView.builder(
-                        itemCount: productState.productList.length,
-                        itemBuilder: (BuildContext context, int i) {
-                          return Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: ProductRowItemOwner(
-                              productState: productState,
-                              index: i,
-                            ),
-                          );
-                        },
-                      ),
-              );
-            },
+      isScrollControlled: true,
+      builder: (context) {
+        return BlocProvider(
+          create: (_) =>
+              ProductBloc(streamRep: context.read<StreamRepository>())
+                ..add(InitializeProductListener(roomId: roomId)),
+          child: _ProductBottomSheetOwner(),
+        );
+      },
+    );
+  }
+
+  void _showAddProductDialog(BuildContext context) {
+    String name = "";
+    String description = "";
+    double startPrice = 0;
+    double increase = 0;
+    ProductType type = ProductType.other;
+    SimpleColor color = SimpleColor.other;
+    ClothingSize size = ClothingSize.M;
+
+    showDialog<void>(
+      context: context,
+      builder: (context) {
+        return SingleChildScrollView(
+          child: AlertDialog(
+            title: const Text('New Product'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ProductDialogPickName(setName: (val) => name = val),
+                ProductDialogPickDescr(setDescr: (val) => description = val),
+                ProductDialogPickPrice(setPrice: (val) => startPrice = val),
+                ProductDialogPickIncrement(
+                    setIncrease: (val) => increase = val),
+                ProductDialogPickType(setType: (val) => type = val),
+                ProductDialogPickColor(setColor: (val) => color = val),
+                ProductDialogPickSize(setSize: (val) => size = val),
+              ],
+            ),
+            actions: [
+              TextButton(
+                child: const Text('Cancel'),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              TextButton(
+                child: const Text('Confirm'),
+                onPressed: () {
+                  // Add product using the Bloc from the bottom sheet if open
+                  final bloc = context.read<ProductBloc>();
+                  bloc.add(AddProductOfferEvent(
+                    roomId: roomId,
+                    name: name,
+                    description: description,
+                    type: type,
+                    size: size,
+                    color: color,
+                    startPrice: startPrice,
+                    increase: increase,
+                  ));
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
           ),
         );
       },
@@ -88,93 +115,34 @@ class _OwnerPanelState extends StatelessWidget {
   }
 }
 
-Future<void> _dialogBuilder(BuildContext context, String roomId) {
-  String productName = "";
-  String productDescr = "";
-  double startPrice = 0;
-  double increase = 0;
-  ProductType productType = ProductType.other;
-  SimpleColor color = SimpleColor.other;
-  ClothingSize size = ClothingSize.M;
-  ProductState productBloc = context.read<ProductState>();
+class _ProductBottomSheetOwner extends StatelessWidget {
+  const _ProductBottomSheetOwner();
 
-  void setName(String newName) {
-    productName = newName;
-  }
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ProductBloc, ProductState>(
+      builder: (context, state) {
+        if (state.products.isEmpty) {
+          return SizedBox(
+            height: 300,
+            child: Center(child: Text("No Products Added")),
+          );
+        }
 
-  void setDescr(String newDescr) {
-    productDescr = newDescr;
-  }
-
-  void setPrice(double newPrice) {
-    startPrice = newPrice;
-  }
-
-  void setIncrease(double newIncrease) {
-    increase = newIncrease;
-  }
-
-  void setProductType(ProductType newType) {
-    productType = newType;
-  }
-
-  void setColor(SimpleColor newColor) {
-    color = newColor;
-  }
-
-  void setSize(ClothingSize newSize) {
-    size = newSize;
-  }
-
-  return showDialog<void>(
-    context: context,
-    builder: (BuildContext context) {
-      return SingleChildScrollView(
-        child: AlertDialog(
-          title: const Text('New Product'),
-          content: Column(
-            children: [
-              ProductDialogPickName(setName: setName),
-              ProductDialogPickDescr(setDescr: setDescr),
-              ProductDialogPickPrice(setPrice: setPrice),
-              ProductDialogPickIncrement(setIncrease: setIncrease),
-              ProductDialogPickType(setType: setProductType),
-              ProductDialogPickColor(setColor: setColor),
-              ProductDialogPickSize(setSize: setSize)
-            ],
+        return SizedBox(
+          height: 500,
+          child: ListView.builder(
+            itemCount: state.products.length,
+            itemBuilder: (context, i) {
+              final product = state.products[i];
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ProductRowItemOwner(productOffer: product),
+              );
+            },
           ),
-          actions: <Widget>[
-            TextButton(
-              style: TextButton.styleFrom(
-                textStyle: Theme.of(context).textTheme.labelLarge,
-              ),
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              style: TextButton.styleFrom(
-                textStyle: Theme.of(context).textTheme.labelLarge,
-              ),
-              child: const Text('Confirm'),
-              onPressed: () async {
-                final navigator = Navigator.of(context);
-                final isSuccess = await productBloc.addProductOffer(
-                    roomId,
-                    productName,
-                    productDescr,
-                    productType,
-                    size,
-                    color,
-                    startPrice,
-                    increase);
-                if (isSuccess) navigator.pop;
-              },
-            ),
-          ],
-        ),
-      );
-    },
-  );
+        );
+      },
+    );
+  }
 }

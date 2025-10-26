@@ -14,8 +14,15 @@ abstract class StreamRepository {
 
   Future<DataState> removeStreamById(String roomId);
 
-  void addProductOffer(String id, String name, String descr, ProductType type,
-      ClothingSize size, SimpleColor color, double startPrice, double increase);
+  Future<DataState> addProductOffer(
+      String id,
+      String name,
+      String descr,
+      ProductType type,
+      ClothingSize size,
+      SimpleColor color,
+      double startPrice,
+      double increase);
 
   Future<List<ProductOffer>> getProductOfferById(String id);
 
