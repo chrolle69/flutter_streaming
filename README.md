@@ -103,7 +103,7 @@ This ensures a **scalable and maintainable live auction app** without mixing lay
 ---
 
 ## Project Structure
-`
+```
 ├── domain/
 │ ├── entities/
 │ ├── use_cases/
@@ -115,7 +115,7 @@ This ensures a **scalable and maintainable live auction app** without mixing lay
 │ ├── blocs/
 │ ├── pages/
 │ └── widgets/
-`
+```
 
 
 ---
