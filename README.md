@@ -58,7 +58,7 @@ A **Flutter app for selling clothes via live auctions**, built with **Clean Arch
 
 ---
 
-## 🔧 Refactoring Plan / Next Steps
+## Refactoring Plan / Next Steps
 
 ### Use Cases
 - Wrap all domain operations (streams, bids, product offers).
@@ -103,7 +103,7 @@ This ensures a **scalable and maintainable live auction app** without mixing lay
 ---
 
 ## Project Structure
-lib/
+`
 ├── domain/
 │ ├── entities/
 │ ├── use_cases/
@@ -113,7 +113,9 @@ lib/
 │ └── repositories/ (implementations)
 ├── presentation/
 │ ├── blocs/
+│ ├── pages/
 │ └── widgets/
+`
 
 
 ---
