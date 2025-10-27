@@ -6,6 +6,7 @@ import 'package:streaming/core/util/appBlocObserver.dart';
 import 'package:streaming/features/auction/data/repository_impl/stream_repository_impl.dart';
 import 'package:streaming/features/auction/domain/repository/stream_repository.dart';
 import 'package:streaming/features/auction/presentation/blocs/streamBloc.dart';
+import 'package:streaming/features/auction/presentation/blocs/productBloc.dart';
 import 'package:streaming/features/auth/presentation/pages/login.dart';
 import 'package:streaming/routeObserver.dart';
 import 'firebase_options.dart';
@@ -26,9 +27,9 @@ Future<void> main() async {
           BlocProvider(
               create: (context) =>
                   StreamBloc(streamRep: context.read<StreamRepository>())),
-          // BlocProvider(
-          //     create: (_) =>
-          //         ProductBloc(streamRep: _.read<StreamRepository>())),
+          BlocProvider(
+              create: (_) =>
+                  ProductBloc(streamRep: _.read<StreamRepository>())),
         ],
         child: const MyApp(),
       ),
