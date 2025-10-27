@@ -12,10 +12,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:videosdk/videosdk.dart' hide Stream;
 
 class RoomPage extends StatefulWidget {
-  const RoomPage(
-      {Key? key, required this.roomId, required this.onFetchStreams});
+  const RoomPage({Key? key, required this.roomId});
   final String roomId;
-  final Function onFetchStreams;
 
   @override
   State<RoomPage> createState() => _RoomPageState();
@@ -65,11 +63,10 @@ class _RoomPageState extends State<RoomPage> {
       if (isOwner(getUser().uid)) {
         endStream(_room);
       }
-      widget.onFetchStreams();
       participants.clear();
       popPage();
     });
-    print(widget.roomId + "-----fetch roomid-----");
+    print("${widget.roomId}-----fetch roomid-----");
   }
 
   void popPage() {
@@ -118,7 +115,7 @@ class _RoomPageState extends State<RoomPage> {
                   padding: const EdgeInsets.all(0),
                   child: joined != null
                       ? joined == "JOINED"
-                          ? Container(
+                          ? SizedBox(
                               height: MediaQuery.of(context).size.height * 0.80,
                               child: ParticipantTile(
                                   participant: participants.values.firstWhere(

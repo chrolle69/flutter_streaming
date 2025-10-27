@@ -100,8 +100,6 @@ class _StreamListPageState extends State<StreamListPage> with RouteAware {
                       Navigator.of(context).push(MaterialPageRoute(
                           builder: (_) => RoomPage(
                                 roomId: stream.id,
-                                onFetchStreams: () =>
-                                    streamBloc.add(FetchStreamsEvent()),
                               )));
                     },
                   );

@@ -23,7 +23,6 @@ class AddStreamPage extends StatelessWidget {
         Navigator.of(context).push(MaterialPageRoute(
           builder: (context) => RoomPage(
             roomId: stream.id,
-            onFetchStreams: onStreamAdded,
           ),
         ));
       },

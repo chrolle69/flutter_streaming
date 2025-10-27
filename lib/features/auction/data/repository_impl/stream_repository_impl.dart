@@ -18,7 +18,7 @@ import 'package:http/http.dart' as http;
 
 class StreamRepositoryImpl implements StreamRepository {
   @override
-  DataState getAmountOfStreams() {
+  Future<DataState> getAmountOfStreams() async {
     var dbRef = FirebaseDatabase.instance.ref();
     var streamList = dbRef.child("liveStreams");
 
@@ -184,7 +184,7 @@ class StreamRepositoryImpl implements StreamRepository {
   }
 
   @override
-  Future<List<ProductOffer>> getProductOfferById(String id) async {
+  Future<DataState> getProductOfferById(String id) async {
     try {
       var streamSnapshot = await FirebaseDatabase.instance
           .ref()
@@ -198,43 +198,62 @@ class StreamRepositoryImpl implements StreamRepository {
           return ProductOfferDTO.fromJson(json).toEntity();
         }).toList();
 
-        return productOffers;
+        return DataSuccess(productOffers);
       }
-      throw Exception("No productOffers found");
+      return DataError(Exception("No productOffers found"));
     } catch (e) {
       print("Error fetching productOffers: $e");
-      throw (Exception("Failed to fetch productOffers: $e"));
+      return DataError(Exception("Failed to fetch productOffers: $e"));
     }
   }
 
   @override
-  void removeProductOfferById(String id) async {
-    FirebaseDatabase.instance
-        .ref()
-        .child("liveStreams")
-        .child(id)
-        .child("productOffers")
-        .remove();
+  Future<DataState> removeProductOfferById(String id) async {
+    try {
+      await FirebaseDatabase.instance
+          .ref()
+          .child("liveStreams")
+          .child(id)
+          .child("productOffers")
+          .remove();
+      return DataSuccess(true);
+    } catch (e) {
+      print("Error removing product offer: $e");
+      return DataError(Exception("Failed to remove product offer"));
+    }
   }
 
   @override
-  void addBid(String userId, String roomId, double bid, String productName) {
-    final bidder = BidderDTO(id: userId, bid: bid).toJson();
-    FirebaseDatabase.instance
-        .ref()
-        .child("liveStreams")
-        .child(roomId)
-        .child("productOffers")
-        .child(productName)
-        .child("bidders")
-        .set([bidder]);
-
-    FirebaseDatabase.instance
-        .ref()
-        .child("liveStreams")
-        .child(roomId)
-        .child("bidders")
-        .set([bidder]);
+  Future<DataState> addBid(
+      String roomId, double bid, String productName) async {
+    final bidder =
+        BidderDTO(id: FirebaseAuth.instance.currentUser!.uid, bid: bid)
+            .toJson();
+    try {
+      await FirebaseDatabase.instance
+          .ref()
+          .child("liveStreams")
+          .child(roomId)
+          .child("productOffers")
+          .child(productName)
+          .child("bidders")
+          .set([bidder]);
+    } catch (e) {
+      print("Error adding bid: $e to product bidders");
+      return DataError(Exception("Failed to add bid to product bidders"));
+    }
+    try {
+      await FirebaseDatabase.instance
+          .ref()
+          .child("liveStreams")
+          .child(roomId)
+          .child("bidders")
+          .set([bidder]);
+    } catch (e) {
+      print("Error adding bid: $e to stream bidders");
+      return DataError(Exception("Failed to add bid to stream bidders"));
+    }
+    return DataSuccess(true);
   }
 
   @override

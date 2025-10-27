@@ -38,7 +38,6 @@ class StreamDTO {
 
   Map<String, dynamic> toJson() => _$StreamDTOToJson(this);
 
-  // 👇 Optional helper to get domain entity
   Stream toEntity() => Stream(
         id: id,
         title: title,

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:streaming/features/auction/data/models/streamDTO.dart';
+import 'package:streaming/features/auction/domain/entities/stream.dart';
 
 class StreamViewPage extends StatefulWidget {
   const StreamViewPage({
@@ -7,7 +7,7 @@ class StreamViewPage extends StatefulWidget {
     required this.stream,
   });
 
-  final StreamDTO stream;
+  final Stream stream;
 
   @override
   State<StreamViewPage> createState() => _StreamViewPageState();

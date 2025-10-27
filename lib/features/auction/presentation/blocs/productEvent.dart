@@ -41,5 +41,3 @@ class AddProductOfferEvent extends ProductEvent {
     required this.increase,
   });
 }
-
-// You could also add events like ProductUpdatedEvent if you want to handle childAdded/childChanged/childRemoved manually.

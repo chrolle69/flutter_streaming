@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:streaming/shared/data/models/enums.dart';
 import 'package:streaming/features/auction/domain/repository/stream_repository.dart';
 import 'package:streaming/features/auction/presentation/blocs/productEvent.dart';
-import 'package:streaming/shared/data/models/enums.dart';
 import 'package:streaming/features/auction/presentation/blocs/productBloc.dart';
 import 'package:streaming/features/auction/presentation/blocs/productState.dart';
 import 'package:streaming/features/auction/presentation/widgets/ProductDialog_PickColor.dart';

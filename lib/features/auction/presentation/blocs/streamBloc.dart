@@ -1,13 +1,24 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:streaming/core/resources/data_state.dart';
 import 'package:streaming/features/auction/domain/repository/stream_repository.dart';
+import 'package:streaming/features/auction/domain/usecases/addStreamUseCase.dart';
+import 'package:streaming/features/auction/domain/usecases/getStreamByIdUseCase.dart';
+import 'package:streaming/features/auction/domain/usecases/getStreamsUseCase.dart';
+import 'package:streaming/features/auction/domain/usecases/removeStreamByIdUseCase.dart';
 import 'package:streaming/features/auction/presentation/blocs/streamEvent.dart';
 import 'package:streaming/features/auction/presentation/blocs/streamState.dart';
 
 class StreamBloc extends Bloc<StreamEvent, StreamState> {
-  final StreamRepository streamRep;
+  late final RemoveStreamByIdUseCase removeStreamByIdUseCase;
+  late final GetStreamByIdUseCase getStreamByIdUseCase;
+  late final AddStreamUseCase addStreamUseCase;
+  late final GetStreamsUseCase getStreamsUseCase;
 
-  StreamBloc({required this.streamRep}) : super(StreamState()) {
+  StreamBloc({required StreamRepository streamRep}) : super(StreamState()) {
+    removeStreamByIdUseCase = RemoveStreamByIdUseCase(streamRep);
+    getStreamByIdUseCase = GetStreamByIdUseCase(streamRep);
+    addStreamUseCase = AddStreamUseCase(streamRep);
+    getStreamsUseCase = GetStreamsUseCase(streamRep);
     on<AddTypeEvent>(_onAddType);
     on<RemoveTypeEvent>(_onRemoveType);
     on<SetTitleEvent>(_onSetTitle);
@@ -47,7 +58,7 @@ class StreamBloc extends Bloc<StreamEvent, StreamState> {
     }
 
     final dataState =
-        await streamRep.addStream(state.title, state.description, state.types);
+        await addStreamUseCase(state.title, state.description, state.types);
 
     if (dataState is DataSuccess) {
       emit(state.copyWith(
@@ -68,7 +79,7 @@ class StreamBloc extends Bloc<StreamEvent, StreamState> {
       RemoveStreamByIdEvent event, Emitter<StreamState> emit) async {
     emit(state.copyWith(status: StreamStatus.loading, errorMessage: null));
 
-    DataState dataState = await streamRep.removeStreamById(event.roomId);
+    DataState dataState = await removeStreamByIdUseCase(event.roomId);
 
     if (dataState is DataSuccess) {
       add(FetchStreamsEvent());
@@ -83,7 +94,7 @@ class StreamBloc extends Bloc<StreamEvent, StreamState> {
       FetchStreamsEvent event, Emitter<StreamState> emit) async {
     emit(state.copyWith(status: StreamStatus.loading, errorMessage: null));
 
-    DataState dataState = await streamRep.getStreams();
+    DataState dataState = await getStreamsUseCase();
 
     if (dataState is DataSuccess) {
       emit(state.copyWith(
@@ -103,7 +114,7 @@ class StreamBloc extends Bloc<StreamEvent, StreamState> {
       selectedStream: null, // clear previous selection
     ));
 
-    DataState dataState = await streamRep.getStreamById(event.roomId);
+    DataState dataState = await getStreamByIdUseCase(event.roomId);
 
     if (dataState is DataSuccess) {
       emit(state.copyWith(
@@ -123,7 +134,7 @@ class StreamBloc extends Bloc<StreamEvent, StreamState> {
     ));
 
     try {
-      await streamRep.getStreamById(event.roomId);
+      await getStreamByIdUseCase(event.roomId);
       emit(state.copyWith(
         availabilityStatus: StreamStatus.success,
         isStreamAvailable: true,

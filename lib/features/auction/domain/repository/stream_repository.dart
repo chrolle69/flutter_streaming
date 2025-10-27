@@ -1,9 +1,8 @@
 import 'package:streaming/core/resources/data_state.dart';
-import 'package:streaming/features/auction/domain/entities/productOffer.dart';
 import 'package:streaming/shared/data/models/enums.dart';
 
 abstract class StreamRepository {
-  DataState getAmountOfStreams();
+  Future<DataState> getAmountOfStreams();
 
   Future<DataState> getStreams();
 
@@ -24,11 +23,11 @@ abstract class StreamRepository {
       double startPrice,
       double increase);
 
-  Future<List<ProductOffer>> getProductOfferById(String id);
+  Future<DataState> getProductOfferById(String id);
 
-  void removeProductOfferById(String id);
+  Future<DataState> removeProductOfferById(String id);
 
-  void addBid(String userId, String roomId, double bid, String productName);
+  Future<DataState> addBid(String roomId, double bid, String productName);
 
   Future<DataState> getCurrentBid(String roomId);
 }
