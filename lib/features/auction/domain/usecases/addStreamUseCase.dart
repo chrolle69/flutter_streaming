@@ -1,5 +1,6 @@
 import 'package:streaming/core/resources/data_state.dart';
 import 'package:streaming/features/auction/domain/repository/stream_repository.dart';
+import 'package:streaming/features/auction/domain/entities/stream.dart';
 import 'package:streaming/shared/data/models/enums.dart';
 
 class AddStreamUseCase {
@@ -7,8 +8,8 @@ class AddStreamUseCase {
 
   AddStreamUseCase(this.repository);
 
-  Future<DataState> call(
+  Future<DataState<Stream>> call(
       String title, String description, List<ProductType> types) async {
-    return await repository.addStream(title, description, types);
+    return repository.addStream(title, description, types);
   }
 }

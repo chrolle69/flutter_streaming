@@ -3,8 +3,10 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  amplify_db_common
   desktop_webview_auth
   gtk
+  url_launcher_linux
   videosdk_webrtc
 )
 

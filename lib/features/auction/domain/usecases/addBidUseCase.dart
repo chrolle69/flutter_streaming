@@ -6,8 +6,8 @@ class AddBidUseCase {
 
   AddBidUseCase(this.repository);
 
-  Future<DataState> call(
-      String roomId, double amount, String productName) async {
-    return await repository.addBid(roomId, amount, productName);
+  Future<DataState<String>> call(
+      String roomId, double amount, String productId) async {
+    return await repository.addBid(roomId, amount, productId);
   }
 }

@@ -101,6 +101,7 @@ class StreamBloc extends Bloc<StreamEvent, StreamState> {
           streams: dataState.data, status: StreamStatus.success));
     } else if (dataState is DataError) {
       emit(state.copyWith(
+          streams: [],
           status: StreamStatus.failure,
           errorMessage: dataState.error.toString()));
     }

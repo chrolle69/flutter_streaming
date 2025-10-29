@@ -1,3 +1,4 @@
+import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -21,6 +22,8 @@ class RoomPage extends StatefulWidget {
 
 class _RoomPageState extends State<RoomPage> {
   late Room _room;
+  late AuthUser awsUser;
+  bool isOwner = false;
   String? ownerId;
   String? joined;
   Map<String, Participant> participants = {};
@@ -50,7 +53,7 @@ class _RoomPageState extends State<RoomPage> {
     });
 
     _room.on(Events.participantLeft, (String participantId) {
-      if (isOwner(participantId)) {
+      if (isOwner) {
         endStream(_room);
       }
       if (participants.containsKey(participantId)) {
@@ -60,13 +63,12 @@ class _RoomPageState extends State<RoomPage> {
 
     _room.on(Events.roomLeft, () {
       if (!mounted) return;
-      if (isOwner(getUser().uid)) {
+      if (isOwner) {
         endStream(_room);
       }
       participants.clear();
       popPage();
     });
-    print("${widget.roomId}-----fetch roomid-----");
   }
 
   void popPage() {
@@ -82,23 +84,23 @@ class _RoomPageState extends State<RoomPage> {
         _room.leave();
       },
       child: BlocListener<StreamBloc, StreamState>(
-        listener: (context, state) {
+        listener: (context, state) async {
           if (state.status == StreamStatus.success &&
               state.selectedStream != null &&
               !_roomCreated) {
             _roomCreated = true;
+            awsUser = await Amplify.Auth.getCurrentUser();
             ownerId = state.selectedStream!.owner;
-            bool amOwner = ownerId == getUser().uid;
+            isOwner = ownerId == awsUser.userId;
 
             _room = VideoSDK.createRoom(
               roomId: widget.roomId,
               token: dotenv.env['VIDEOSDK_TOKEN']!,
-              displayName: amOwner
-                  ? "Host: ${getUser().displayName ?? "Anonymous"}"
-                  : "Viewer: ${getUser().displayName ?? "Anonymous"}",
+              displayName:
+                  "${isOwner ? "Host:" : "Viewer:"}${awsUser.username}",
               micEnabled: false,
-              camEnabled: amOwner,
-              participantId: getUser().uid,
+              camEnabled: isOwner,
+              participantId: awsUser.userId,
               defaultCameraIndex: 1,
             );
             setRoomEventListener();
@@ -127,13 +129,13 @@ class _RoomPageState extends State<RoomPage> {
                       : Card(
                           child: Padding(
                           padding: const EdgeInsets.all(20.0),
-                          child: Text(isOwner(getUser().uid)
+                          child: Text(isOwner
                               ? "Creating Live Stream"
                               : "Joining Live Stream"),
                         )),
                 ),
                 joined != null
-                    ? isOwner(getUser().uid)
+                    ? isOwner
                         ? OwnerPanel(roomId: widget.roomId)
                         : ViewerPanel(roomId: widget.roomId)
                     : SizedBox(),
@@ -143,10 +145,6 @@ class _RoomPageState extends State<RoomPage> {
         ),
       ),
     );
-  }
-
-  bool isOwner(String userId) {
-    return ownerId != null && userId == ownerId;
   }
 
   Future<void> setOwnerId() async {
@@ -181,9 +179,13 @@ class _RoomPageState extends State<RoomPage> {
     }
   }
 
-  User getUser() {
+  User getFirebaseUser() {
     var user = FirebaseAuth.instance.currentUser;
     if (user == null) throw Exception("ID not found");
     return user;
+  }
+
+  Future<AuthUser> getAWSUser() {
+    return Amplify.Auth.getCurrentUser();
   }
 }

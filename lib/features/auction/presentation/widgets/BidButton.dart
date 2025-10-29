@@ -38,7 +38,7 @@ class BidButton extends StatelessWidget {
         //productState.addBid(bet, prod.name);
         context.read<ProductBloc>().add(AddBidEvent(
               bet,
-              prod.name,
+              prod.id,
               roomId,
             ));
       },

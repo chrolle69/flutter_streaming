@@ -1,11 +1,15 @@
-import 'dart:convert';
+import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
+import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:dio/dio.dart';
+import 'package:streaming/features/auction/data/data_sources/remote/remote_data_source_aws.dart';
+import 'package:streaming/features/auction/data/data_sources/remote/remote_data_source_firebase.dart';
+import 'package:streaming/features/auction/data/exceptions.dart';
 import 'package:streaming/features/auction/domain/entities/bidder.dart';
 import 'package:streaming/features/auction/domain/entities/productOffer.dart';
 import 'package:streaming/features/auction/domain/entities/stream.dart';
 import 'package:streaming/shared/data/models/enums.dart';
 import 'package:streaming/core/util/map_utils.dart';
 import 'package:uuid/uuid.dart';
-import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -14,47 +18,40 @@ import 'package:streaming/features/auction/data/models/bidderDTO.dart';
 import 'package:streaming/features/auction/data/models/productOfferDTO.dart';
 import 'package:streaming/features/auction/data/models/streamDTO.dart';
 import 'package:streaming/features/auction/domain/repository/stream_repository.dart';
-import 'package:http/http.dart' as http;
 
 class StreamRepositoryImpl implements StreamRepository {
+  final RemoteDataSourceFirebase firebase;
+  final RemoteDataSourceAWS aws;
+
+  StreamRepositoryImpl(this.firebase, this.aws);
+
   @override
-  Future<DataState> getAmountOfStreams() async {
-    var dbRef = FirebaseDatabase.instance.ref();
-    var streamList = dbRef.child("liveStreams");
-
-    streamList.get().then((snapshot) {
-      if (snapshot.exists) {
-        return DataSuccess(snapshot.children.length);
-      } else {
-        return DataError(Exception("snapshot does not exist"));
-      }
-    }).onError((error, stackTrace) => DataError(
-        HttpException("HTTP failed: \n could not fetch live streams")));
-
-    return DataError(Exception("Should not happend"));
+  Future<DataState<int>> getAmountOfStreams() async {
+    try {
+      var snapshot = await firebase.getStreams();
+      return DataSuccess(snapshot.children.length);
+    } on SnapshotNotFoundException catch (_) {
+      return DataSuccess(0);
+    } on Exception catch (e) {
+      return DataError(e);
+    }
   }
 
   @override
-  Future<DataState> getStreams() async {
+  Future<DataState<List<Stream>>> getStreams() async {
     try {
-      var dbRef = FirebaseDatabase.instance.ref();
-      var streamList = dbRef.child("liveStreams");
+      var snapshot = await firebase.getStreams();
 
-      var snapshot = await streamList.get();
-      if (snapshot.exists) {
-        var streams = snapshot.children.map((e) {
-          final json = convertDynamicMapToStringMap(e.value as Map);
-          return StreamDTO.fromJson(json).toEntity();
-        }).toList();
+      var streams = snapshot.children.map((e) {
+        final json = convertDynamicMapToStringMap(e.value as Map);
+        return StreamDTO.fromJson(json).toEntity();
+      }).toList();
 
-        return DataSuccess(streams);
-      } else {
-        print("No snapshot exists");
-        return DataSuccess(<Stream>[]);
-      }
-    } catch (e) {
-      print("Error fetching streams: $e");
-      return DataError(Exception("Failed to fetch live streams"));
+      return DataSuccess(streams);
+    } on SnapshotNotFoundException catch (_) {
+      return DataSuccess([]);
+    } on Exception catch (e) {
+      return DataError(e);
     }
   }
 
@@ -62,19 +59,20 @@ class StreamRepositoryImpl implements StreamRepository {
     if (value is Map<dynamic, dynamic>) {
       return StreamDTO.fromJson(convertDynamicMapToStringMap(value)).toEntity();
     } else {
-      throw Exception("Invalid data type for StreamModel.fromJson");
+      throw ObjectException("Invalid data type for StreamModel.fromJson");
     }
   }
 
   @override
-  Future<DataState> addStream(
+  Future<DataState<Stream>> addStream(
       String title, String description, List<ProductType> types) async {
     try {
-      var firebaseUser = FirebaseAuth.instance.currentUser;
-      if (firebaseUser == null) {
-        throw Exception("User not logged in");
+      //var user = await getFirebaseUser();
+      var user = await getAWSUser();
+      if (!await isAWSUserSignedIn()) {
+        throw UserNotFoundException("User must be logged in");
       }
-
+      print("userid----------${user.userId}--------");
       StreamDTO newStream = await addRoom().then((id) {
         return StreamDTO(
             id: id.toString(),
@@ -82,68 +80,52 @@ class StreamRepositoryImpl implements StreamRepository {
             description: description,
             productTypes: types,
             thumbnail: "fake Thumbnail",
-            owner: firebaseUser.uid,
+            owner: user.userId,
             bidders: [],
             productOffers: {});
       });
 
-      var dbRef = FirebaseDatabase.instance.ref();
-      var streamList = dbRef.child("liveStreams");
-      await streamList.child(newStream.id).set(newStream.toJson());
+      await firebase.addStream(newStream.toJson(), newStream.id);
       return DataSuccess(newStream.toEntity());
-    } catch (e) {
-      print("Error creating room: -$e-");
-      return DataError(Exception(e));
+    } on DatabaseConnectionException catch (e) {
+      return DataError(e);
+    } on UserNotFoundException catch (e) {
+      return DataError(e);
+    } on Exception catch (e) {
+      return DataError(Exception("Failed to add stream: $e"));
     }
   }
 
   Future<String> addRoom() async {
     var token = dotenv.env['VIDEOSDK_TOKEN']!; // Replace with your actual token
-
-    final http.Response httpResponse = await http.post(
-      Uri.parse("https://api.videosdk.live/v2/rooms"),
-      headers: {'Authorization': token},
-    );
-    //Destructuring the roomId from the response
-    return json.decode(httpResponse.body)['roomId'];
+    return firebase.addRoom(token);
   }
 
   @override
-  Future<DataState> getStreamById(String id) async {
+  Future<DataState<Stream>> getStreamById(String id) async {
     try {
-      var streamSnapshot = await FirebaseDatabase.instance
-          .ref()
-          .child("liveStreams")
-          .child(id)
-          .get();
-      if (streamSnapshot.exists) {
-        return DataSuccess(toStreamObject(streamSnapshot.value));
-      }
-      return DataError(Exception("Stream does not exist"));
-    } catch (e) {
-      print("Error fetching stream: $e");
-      return DataError(Exception("Failed to fetch live stream"));
+      var snapshot = await firebase.getStreamById(id);
+      return DataSuccess(toStreamObject(snapshot.value));
+    } on TypeError catch (_) {
+      return DataError(ObjectException("Stream could not be accessed"));
+    } on Exception catch (e) {
+      return DataError(e);
     }
   }
 
   @override
-  Future<DataState> removeStreamById(String roomId) async {
+  Future<DataState<String>> removeStreamById(String roomId) async {
     try {
-      await FirebaseDatabase.instance
-          .ref()
-          .child("liveStreams")
-          .child(roomId)
-          .remove();
-      return DataSuccess(true);
-    } catch (e) {
-      print("Error removing stream: $e");
-      return DataError(Exception("Failed to remove live stream by ID"));
+      firebase.removeStreamById(roomId);
+      return DataSuccess(roomId);
+    } on Exception catch (e) {
+      return DataError(e);
     }
   }
 
   @override
-  Future<DataState> addProductOffer(
-      String id,
+  Future<DataState<ProductOffer>> addProductOffer(
+      String roomId,
       String name,
       String descr,
       ProductType type,
@@ -151,10 +133,9 @@ class StreamRepositoryImpl implements StreamRepository {
       SimpleColor color,
       double startPrice,
       double increase) async {
-    var uuid = Uuid().v1();
-    var tmp = {};
     try {
-      tmp = ProductOfferDTO(
+      var uuid = Uuid().v1();
+      var productOffer = ProductOfferDTO(
           id: uuid,
           name: name,
           descr: descr,
@@ -163,120 +144,96 @@ class StreamRepositoryImpl implements StreamRepository {
           color: color,
           startPrice: startPrice,
           increase: increase,
-          bidders: []).toJson();
-    } catch (e) {
-      print("Error creating product offer: $e");
-      return DataError(Exception("Failed to create product offer"));
+          bidders: []);
+      await firebase.addProductOffer(productOffer.toJson(), roomId, uuid);
+      return DataSuccess(productOffer.toEntity());
+    } on NotNullableError catch (_) {
+      return DataError(ObjectException("Could not create Product"));
+    } on Exception catch (e) {
+      return DataError(e);
     }
-    try {
-      FirebaseDatabase.instance
-          .ref()
-          .child("liveStreams")
-          .child(id)
-          .child("productOffers")
-          .child(name)
-          .set(tmp);
-    } catch (e) {
-      print("Error adding product offer: $e");
-      return DataError(Exception("Failed to add product offer"));
-    }
-    return DataSuccess(true);
   }
 
   @override
-  Future<DataState> getProductOfferById(String id) async {
+  Future<DataState<List<ProductOffer>>> getProductOfferById(String id) async {
     try {
-      var streamSnapshot = await FirebaseDatabase.instance
-          .ref()
-          .child("liveStreams")
-          .child(id)
-          .child("productOffers")
-          .get();
-      if (streamSnapshot.exists) {
-        List<ProductOffer> productOffers = streamSnapshot.children.map((e) {
-          final json = convertDynamicMapToStringMap(e.value as Map);
-          return ProductOfferDTO.fromJson(json).toEntity();
-        }).toList();
-
-        return DataSuccess(productOffers);
-      }
-      return DataError(Exception("No productOffers found"));
-    } catch (e) {
-      print("Error fetching productOffers: $e");
+      DataSnapshot snapshot = await firebase.getProductOfferById(id);
+      Iterable<ProductOffer> productOffers = snapshot.children.map((e) {
+        final json = convertDynamicMapToStringMap(e.value as Map);
+        return ProductOfferDTO.fromJson(json).toEntity();
+      });
+      return DataSuccess(productOffers.toList());
+    } on FormatException catch (_) {
+      return DataError(ObjectException("Could not Fetch product"));
+    } on TypeError catch (_) {
+      return DataError(ObjectException("Could not Fetch product"));
+    } on Exception catch (e) {
       return DataError(Exception("Failed to fetch productOffers: $e"));
     }
   }
 
   @override
-  Future<DataState> removeProductOfferById(String id) async {
+  Future<DataState<String>> removeProductOfferById(String id) async {
     try {
-      await FirebaseDatabase.instance
-          .ref()
-          .child("liveStreams")
-          .child(id)
-          .child("productOffers")
-          .remove();
-      return DataSuccess(true);
-    } catch (e) {
-      print("Error removing product offer: $e");
-      return DataError(Exception("Failed to remove product offer"));
+      await firebase.removeProductOfferById(id);
+      return DataSuccess(id);
+    } on Exception catch (e) {
+      return DataError(e);
     }
   }
 
   @override
-  Future<DataState> addBid(
-      String roomId, double bid, String productName) async {
-    final bidder =
-        BidderDTO(id: FirebaseAuth.instance.currentUser!.uid, bid: bid)
-            .toJson();
+  Future<DataState<String>> addBid(
+      String roomId, double bid, String productId) async {
     try {
-      await FirebaseDatabase.instance
-          .ref()
-          .child("liveStreams")
-          .child(roomId)
-          .child("productOffers")
-          .child(productName)
-          .child("bidders")
-          .set([bidder]);
-    } catch (e) {
-      print("Error adding bid: $e to product bidders");
-      return DataError(Exception("Failed to add bid to product bidders"));
+      final bidder =
+          BidderDTO(id: FirebaseAuth.instance.currentUser!.uid, bid: bid);
+      await firebase.addBid(bidder.toJson(), roomId, productId);
+      return DataSuccess(bidder.id);
+    } on FormatException catch (_) {
+      return DataError(ObjectException("Could not create bid"));
+    } on TypeError catch (_) {
+      return DataError(ObjectException("Could not create bid"));
+    } on Exception catch (e) {
+      return DataError(e);
     }
-    try {
-      await FirebaseDatabase.instance
-          .ref()
-          .child("liveStreams")
-          .child(roomId)
-          .child("bidders")
-          .set([bidder]);
-    } catch (e) {
-      print("Error adding bid: $e to stream bidders");
-      return DataError(Exception("Failed to add bid to stream bidders"));
-    }
-    return DataSuccess(true);
   }
 
   @override
-  Future<DataState> getCurrentBid(String roomId) async {
+  Future<DataState<Bidder>> getCurrentBid(String roomId) async {
     try {
-      var streamSnapshot = await FirebaseDatabase.instance
-          .ref()
-          .child("liveStreams")
-          .child(roomId)
-          .child("bidders")
-          .get();
-      if (streamSnapshot.exists) {
-        List<Bidder> bidderList = streamSnapshot.children.map((e) {
-          return BidderDTO.fromJson(e.value as Map<String, dynamic>).toEntity();
-        }).toList();
+      var snapshot = await firebase.getBids(roomId);
+      Iterable<Bidder> bidderList = snapshot.children.map((e) {
+        return BidderDTO.fromJson(e.value as Map<String, dynamic>).toEntity();
+      });
+      bidderList.toList().sort((a, b) => b.bid.compareTo(a.bid));
+      return DataSuccess(bidderList.first);
+    } on SnapshotNotFoundException catch (_) {
+      return DataError(Exception("no bidders found"));
+    } on Exception catch (e) {
+      return DataError(e);
+    }
+  }
 
-        bidderList.sort((a, b) => b.bid.compareTo(a.bid));
-        return DataSuccess(bidderList.first);
-      }
-      return DataError(Exception("No bids found"));
+  Future<User?> getFirebaseUser() async {
+    return FirebaseAuth.instance.currentUser;
+  }
+
+  Future<bool> isFirebaseUserSignedIn() async {
+    var user = FirebaseAuth.instance.currentUser;
+    return user != null;
+  }
+
+  Future<AuthUser> getAWSUser() async {
+    return Amplify.Auth.getCurrentUser();
+  }
+
+  Future<bool> isAWSUserSignedIn() async {
+    try {
+      var session = await Amplify.Auth.fetchAuthSession();
+      return session.isSignedIn;
     } catch (e) {
-      print("Error fetching current bid: $e");
-      return DataError(Exception("Failed to fetch current bid"));
+      return false;
     }
   }
 }

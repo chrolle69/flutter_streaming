@@ -99,7 +99,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     emit(state.copyWith(status: ProductStatus.loading, errorMessage: null));
 
     DataState dataState =
-        await addBidUseCase(event.roomId, event.bid, event.productName);
+        await addBidUseCase(event.roomId, event.bid, event.productId);
 
     if (dataState is DataSuccess) {
       emit(state.copyWith(status: ProductStatus.success));

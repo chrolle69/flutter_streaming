@@ -6,7 +6,7 @@ class RemoveStreamByIdUseCase {
 
   RemoveStreamByIdUseCase(this.repository);
 
-  Future<DataState> call(String roomId) async {
+  Future<DataState<String>> call(String roomId) async {
     return await repository.removeStreamById(roomId);
   }
 }

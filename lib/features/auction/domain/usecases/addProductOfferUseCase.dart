@@ -1,4 +1,5 @@
 import 'package:streaming/core/resources/data_state.dart';
+import 'package:streaming/features/auction/domain/entities/productOffer.dart';
 import 'package:streaming/features/auction/domain/repository/stream_repository.dart';
 import 'package:streaming/shared/data/models/enums.dart';
 
@@ -7,7 +8,7 @@ class AddProductOfferUseCase {
 
   AddProductOfferUseCase(this.repository);
 
-  Future<DataState> call(
+  Future<DataState<ProductOffer>> call(
       String roomId,
       String name,
       String descr,

@@ -10,9 +10,9 @@ class InitializeProductListener extends ProductEvent {
 
 class AddBidEvent extends ProductEvent {
   final double bid;
-  final String productName;
+  final String productId;
   final String roomId;
-  AddBidEvent(this.bid, this.productName, this.roomId);
+  AddBidEvent(this.bid, this.productId, this.roomId);
 }
 
 class ProductUpdatedEvent extends ProductEvent {
